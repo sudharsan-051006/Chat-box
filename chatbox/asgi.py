@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 
 import os
 from django.core.asgi import get_asgi_application
-from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
-import chatbox.routing  # ✅ correct import
+from channels.auth import AuthMiddlewareStack
+import chatbox.routing
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatbox.settings")
 
