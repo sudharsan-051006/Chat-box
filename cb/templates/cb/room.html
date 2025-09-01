@@ -101,7 +101,7 @@
     <h1>Chat Room: {{ room_name }}</h1>
 
     <div id="chat-container">
-        <textarea id="chat-log" readonly></textarea>
+        <div id="chat-log"></div>
         <div id="chat-input-container">
             <input id="chat-message-input" type="text" placeholder="Type your message here...">
             <input id="chat-message-submit" type="button" value="Send">
@@ -111,14 +111,42 @@
     <script>
         const roomName = "{{ room_name }}";
 
+        // Generate persistent user ID
+        let userId = localStorage.getItem('chat_user_id');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_user_id', userId);
+        }
+
+        // Assign a color for the user
+        function getUserColor(id) {
+            const colors = ["#e6194b","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#46f0f0","#f032e6"];
+            let hash = 0;
+            for (let i = 0; i < id.length; i++) {
+                hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        // Generate a code for the user
+        function getUserCode(id) {
+            return id.substr(0,3).toUpperCase() + Math.floor(Math.random() * 100);
+        }
+
+        const userColor = getUserColor(userId);
+        const userCode = getUserCode(userId);
+
         const chatSocket = new WebSocket(
             "wss://" + window.location.host + "/ws/chat/" + roomName + "/"
         );
 
+        const chatLog = document.querySelector("#chat-log");
+
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            const chatLog = document.querySelector("#chat-log");
-            chatLog.value += (data.message + "\n");
+            const msgElement = document.createElement("div");
+            msgElement.innerHTML = `<b style="color:${data.color}">${data.username} (${data.code})</b>: ${data.message}`;
+            chatLog.appendChild(msgElement);
             chatLog.scrollTop = chatLog.scrollHeight; // auto scroll
         };
 
@@ -130,7 +158,6 @@
         const messageSubmit = document.querySelector("#chat-message-submit");
 
         messageInput.focus();
-
         messageInput.addEventListener("keyup", function(e) {
             if (e.key === "Enter") {
                 messageSubmit.click();
@@ -138,9 +165,14 @@
         });
 
         messageSubmit.onclick = function() {
-            const message = messageInput.value;
-            if (message.trim() !== "") {
-                chatSocket.send(JSON.stringify({"message": message}));
+            const message = messageInput.value.trim();
+            if (message !== "") {
+                chatSocket.send(JSON.stringify({
+                    "message": message,
+                    "username": userId,
+                    "color": userColor,
+                    "code": userCode
+                }));
                 messageInput.value = "";
             }
         };
