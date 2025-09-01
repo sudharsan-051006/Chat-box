@@ -16,11 +16,13 @@
             height: 100vh;
             margin: 0;
         }
+
         h1 {
             color: #fff;
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
         }
+
         #chat-container {
             background: #fff;
             border-radius: 15px;
@@ -32,6 +34,7 @@
             padding: 20px;
             height: 70vh;
         }
+
         #chat-log {
             flex: 1;
             border: none;
@@ -41,12 +44,13 @@
             overflow-y: auto;
             font-size: 16px;
             line-height: 1.5;
-            white-space: pre-wrap;
         }
+
         #chat-input-container {
             display: flex;
             margin-top: 15px;
         }
+
         #chat-message-input {
             flex: 1;
             padding: 10px 15px;
@@ -55,10 +59,12 @@
             border: 1px solid #ccc;
             outline: none;
         }
+
         #chat-message-input:focus {
             border-color: #2575fc;
             box-shadow: 0 0 5px rgba(37,117,252,0.5);
         }
+
         #chat-message-submit {
             background: #2575fc;
             color: white;
@@ -70,17 +76,21 @@
             transition: 0.3s;
             font-weight: bold;
         }
+
         #chat-message-submit:hover {
             background: #6a11cb;
         }
+
         /* Scrollbar styling */
         #chat-log::-webkit-scrollbar {
             width: 10px;
         }
+
         #chat-log::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
+
         #chat-log::-webkit-scrollbar-thumb {
             background: #2575fc;
             border-radius: 10px;
@@ -101,22 +111,17 @@
     <script>
         const roomName = "{{ room_name }}";
 
-        // Generate or fetch persistent username & color
-        let username = localStorage.getItem("chatUsername");
+        // Persistent user ID and color
+        let userId = localStorage.getItem("chatUserId");
+        if (!userId) {
+            userId = "User" + Math.floor(Math.random() * 1000);
+            localStorage.setItem("chatUserId", userId);
+        }
+
         let userColor = localStorage.getItem("chatUserColor");
-
-        if (!username) {
-            username = "User" + Math.floor(Math.random() * 1000);
-            localStorage.setItem("chatUsername", username);
-        }
         if (!userColor) {
-            userColor = getRandomColor();
+            userColor = "#" + Math.floor(Math.random()*16777215).toString(16);
             localStorage.setItem("chatUserColor", userColor);
-        }
-
-        function getRandomColor() {
-            const colors = ["#FF5733","#33FF57","#3357FF","#F39C12","#8E44AD","#16A085"];
-            return colors[Math.floor(Math.random() * colors.length)];
         }
 
         const chatSocket = new WebSocket(
@@ -127,16 +132,12 @@
             const data = JSON.parse(e.data);
             const chatLog = document.querySelector("#chat-log");
 
-            const msgDiv = document.createElement("div");
-            const userLabel = document.createElement("span");
-            userLabel.textContent = data.username + ": ";
-            userLabel.style.color = data.color;
-            userLabel.style.fontWeight = "bold";
+            const msgLine = document.createElement("div");
+            msgLine.style.color = data.color || "#000";
+            msgLine.textContent = (data.user || "Unknown") + ": " + data.message;
 
-            msgDiv.appendChild(userLabel);
-            msgDiv.appendChild(document.createTextNode(data.message));
-            chatLog.appendChild(msgDiv);
-            chatLog.scrollTop = chatLog.scrollHeight;
+            chatLog.appendChild(msgLine);
+            chatLog.scrollTop = chatLog.scrollHeight; // auto scroll
         };
 
         chatSocket.onclose = function(e) {
@@ -158,9 +159,9 @@
             const message = messageInput.value;
             if (message.trim() !== "") {
                 chatSocket.send(JSON.stringify({
-                    "username": username,
-                    "color": userColor,
-                    "message": message
+                    "message": message,
+                    "user": userId,
+                    "color": userColor
                 }));
                 messageInput.value = "";
             }
