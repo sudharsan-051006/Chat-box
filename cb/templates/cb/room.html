@@ -46,6 +46,14 @@
             line-height: 1.5;
         }
 
+        .message {
+            margin-bottom: 8px;
+        }
+
+        .message strong {
+            margin-right: 5px;
+        }
+
         #chat-input-container {
             display: flex;
             margin-top: 15px;
@@ -111,61 +119,53 @@
     <script>
         const roomName = "{{ room_name }}";
 
-        // Persistent user ID and color
-        let userId = localStorage.getItem("chatUserId");
-        if (!userId) {
-            userId = "User" + Math.floor(Math.random() * 1000);
-            localStorage.setItem("chatUserId", userId);
-        }
-
-        let userColor = localStorage.getItem("chatUserColor");
-        if (!userColor) {
-            userColor = "#" + Math.floor(Math.random()*16777215).toString(16);
-            localStorage.setItem("chatUserColor", userColor);
-        }
-
         const chatSocket = new WebSocket(
             "wss://" + window.location.host + "/ws/chat/" + roomName + "/"
         );
 
+        const chatLog = document.querySelector("#chat-log");
+        const messageInput = document.querySelector("#chat-message-input");
+        const messageSubmit = document.querySelector("#chat-message-submit");
+
+        // Function to add message to chat log
+        function addMessage(user, message, color) {
+            const messageElem = document.createElement("div");
+            messageElem.classList.add("message");
+            messageElem.innerHTML = `<strong style="color:${color}">${user}:</strong> ${message}`;
+            chatLog.appendChild(messageElem);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            const chatLog = document.querySelector("#chat-log");
-
-            const msgLine = document.createElement("div");
-            msgLine.style.color = data.color || "#000";
-            msgLine.textContent = (data.user || "Unknown") + ": " + data.message;
-
-            chatLog.appendChild(msgLine);
-            chatLog.scrollTop = chatLog.scrollHeight; // auto scroll
+            const user = data.user || "Unknown";
+            const message = data.message || "";
+            const color = data.color || "#000000";
+            addMessage(user, message, color);
         };
 
         chatSocket.onclose = function(e) {
             console.error("Chat socket closed unexpectedly");
+            addMessage("System", "Connection closed", "#888888");
         };
 
-        const messageInput = document.querySelector("#chat-message-input");
-        const messageSubmit = document.querySelector("#chat-message-submit");
-
-        messageInput.focus();
-
+        // Send message on Enter key
         messageInput.addEventListener("keyup", function(e) {
             if (e.key === "Enter") {
                 messageSubmit.click();
             }
         });
 
+        // Send message button
         messageSubmit.onclick = function() {
-            const message = messageInput.value;
-            if (message.trim() !== "") {
-                chatSocket.send(JSON.stringify({
-                    "message": message,
-                    "user": userId,
-                    "color": userColor
-                }));
+            const message = messageInput.value.trim();
+            if (message !== "") {
+                chatSocket.send(JSON.stringify({"message": message}));
                 messageInput.value = "";
             }
         };
+
+        messageInput.focus();
     </script>
 </body>
 </html>
