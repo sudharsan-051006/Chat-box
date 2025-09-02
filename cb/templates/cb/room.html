@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Room</title>
-    <!-- <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon"> -->
+    <title>Chat Room: {{ room_name }}</title>
+    <!-- Favicon removed to avoid static errors -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -128,7 +128,6 @@
         const messageInput = document.querySelector("#chat-message-input");
         const messageSubmit = document.querySelector("#chat-message-submit");
 
-        // Function to add message to chat log
         function addMessage(user, message, color) {
             const messageElem = document.createElement("div");
             messageElem.classList.add("message");

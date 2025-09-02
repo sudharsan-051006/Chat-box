@@ -1,16 +1,13 @@
 from pathlib import Path
-from decouple import config  # make sure python-decouple is installed
+from decouple import config
 import os
 
-# --- Base Directory ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- Security ---
 SECRET_KEY = config("DJANGO_SECRET_KEY")
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="").split(",")
 
-# --- Installed Apps ---
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -18,11 +15,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "cb",          # your chat app
-    "channels",    # Django Channels
+    "cb",
+    "channels",
 ]
 
-# --- Middleware ---
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -33,10 +29,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# --- URL Configuration ---
-ROOT_URLCONF = "chatbox.urls"  # <- THIS IS IMPORTANT
+ROOT_URLCONF = "chatbox.urls"
 
-# --- Templates ---
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -53,11 +47,9 @@ TEMPLATES = [
     },
 ]
 
-# --- WSGI / ASGI ---
 WSGI_APPLICATION = "chatbox.wsgi.application"
 ASGI_APPLICATION = "chatbox.asgi.application"
 
-# --- Database ---
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -65,7 +57,6 @@ DATABASES = {
     }
 }
 
-# --- Channels ---
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -77,31 +68,19 @@ CHANNEL_LAYERS = {
     },
 }
 
-# --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# --- Internationalization ---
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# --- Static files ---
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# --- Default auto field ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
