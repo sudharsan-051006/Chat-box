@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config  # make sure python-decouple is installed
+import os
 
 # --- Base Directory ---
 BASE_DIR = Path(__file__).resolve().parent.parent
