@@ -67,8 +67,13 @@ DATABASES = {
 # --- Channels ---
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(
+                f"rediss://default:{os.environ.get('UPSTASH_REDIS_PASSWORD')}@stunning-badger-14786.upstash.io:6379/0"
+            )],
+        },
+    },
 }
 
 # --- Password validation ---
