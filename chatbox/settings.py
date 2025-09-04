@@ -1,13 +1,16 @@
 from pathlib import Path
 from decouple import config
 import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config("DJANGO_SECRET_KEY")
+# Security
+SECRET_KEY = config("DJANGO_SECRET_KEY", default="insecure-secret-key")
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="").split(",")
+ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="*").split(",")
 
+# Installed apps
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -20,6 +23,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -47,27 +51,35 @@ TEMPLATES = [
     },
 ]
 
+# ASGI + WSGI
 WSGI_APPLICATION = "chatbox.wsgi.application"
 ASGI_APPLICATION = "chatbox.asgi.application"
 
+# Database (use PostgreSQL if DATABASE_URL exists, else fallback to sqlite3)
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
 
+# Channels (WebSockets) — using Redis
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(
-                f"rediss://default:{os.environ.get('UPSTASH_REDIS_PASSWORD')}@stunning-badger-14786.upstash.io:6379/0"
-            )],
+            "hosts": [config("REDIS_URL", default="redis://127.0.0.1:6379")],
         },
     },
 }
 
+# Auth redirects
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/chat/room1/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -75,11 +87,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Localization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
