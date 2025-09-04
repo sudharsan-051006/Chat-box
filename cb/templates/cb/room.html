@@ -133,6 +133,7 @@
 
     <!-- Input box -->
     <form id="chat-form" class="mt-3 d-flex">
+      {% csrf_token %}
       <input id="chat-message-input" type="text" class="form-control me-2" placeholder="Type a message..." autocomplete="off">
       <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
     </form>
