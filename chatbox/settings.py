@@ -58,7 +58,7 @@ ASGI_APPLICATION = "chatbox.asgi.application"
 # Database (use PostgreSQL if DATABASE_URL exists, else fallback to sqlite3)
 DATABASES = {
     "default": dj_database_url.config(
-        default=config("DATABASE_URL"),  # use DATABASE_URL, not DATABASE_PUBLIC_URL
+        default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=True
     )
