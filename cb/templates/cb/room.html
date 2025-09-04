@@ -1,171 +1,220 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Room: {{ room_name }}</title>
-    <!-- Favicon removed to avoid static errors -->
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to right, #6a11cb, #2575fc);
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8">
+  <title>Chat Room</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: rgb(69, 68, 68); }
 
-        h1 {
-            color: #fff;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
-        }
+    /* Chat messages area */
+    #chat-messages {
+      height: 65vh;
+      overflow-y: auto;
+      padding: 2rem 1rem 1rem 1rem;
+      border: 1px solid red;
+      border-radius: .5rem;
+      background: black;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .message-time {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.7); /* white for sender */
+  text-align: right;
+  margin-top: 2px;
+}
 
-        #chat-container {
-            background: #fff;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 800px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            height: 70vh;
-        }
+.other .message-time {
+  color: rgba(0,0,0,0.6); /* dark for others' messages */
+}
 
-        #chat-log {
-            flex: 1;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            background: #f1f1f1;
-            overflow-y: auto;
-            font-size: 16px;
-            line-height: 1.5;
-        }
+    /* Animated chat title */
+    .chat-title {
+      color: #dee2e6;
+      font-size: 2rem;
+      font-weight: bold;
+      position: absolute;      
+      top: 10px;                
+      left: 50%;
+      transform: translateX(-50%);
+      display: block;
+      opacity: 0;
+      animation: flySequence 3s linear infinite;
+      z-index: 10;
+    }
 
-        .message {
-            margin-bottom: 8px;
-        }
+    @keyframes flySequence {
+      0% { transform: translate(-50%, -50px) scale(0.3); opacity: 0; }
+      10% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+      60% { opacity: 0; }
+      100% { transform: translate(-50%, -50px) scale(0.3); opacity: 0; }
+    }
 
-        .message strong {
-            margin-right: 5px;
-        }
+    /* Messages styling */
+    .message {
+      display: inline-block;
+      margin-bottom: 0.75rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 1rem;
+      word-wrap: break-word;
+      max-width: 70%;
+    }
 
-        #chat-input-container {
-            display: flex;
-            margin-top: 15px;
-        }
+    .me {
+      background: blue;
+      color: #fff;
+      margin-left: auto;
+      text-align: right;
+      display: block;
+      width: fit-content;
+    }
+    .other {
+      background: #e9ecef;
+      color: #212529;
+      margin-right: auto;
+      text-align: left;
+      display: block;
+      width: fit-content;
+    }
 
-        #chat-message-input {
-            flex: 1;
-            padding: 10px 15px;
-            font-size: 16px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            outline: none;
-        }
+    .system { 
+      text-align: center; 
+      color: #6c757d; 
+      font-style: italic; 
+      background: none; 
+    }
 
-        #chat-message-input:focus {
-            border-color: #2575fc;
-            box-shadow: 0 0 5px rgba(37,117,252,0.5);
-        }
+    /* Online Users button */
+    #onlineUsersBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 15;
+    }
 
-        #chat-message-submit {
-            background: #2575fc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin-left: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: bold;
-        }
+    /* Input styling */
+    #chat-message-input {
+      color: white;
+      background-color: black;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
 
-        #chat-message-submit:hover {
-            background: #6a11cb;
-        }
-
-        /* Scrollbar styling */
-        #chat-log::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        #chat-log::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        #chat-log::-webkit-scrollbar-thumb {
-            background: #2575fc;
-            border-radius: 10px;
-        }
-    </style>
+    /* Logout button styling */
+    .logout-btn {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      position: absolute;
+      right: 10px;
+      top: 20px;
+      z-index: 20;
+    }
+  </style>
 </head>
 <body>
-    <h1>Chat Room: {{ room_name }}</h1>
-
-    <div id="chat-container">
-        <div id="chat-log"></div>
-        <div id="chat-input-container">
-            <input id="chat-message-input" type="text" placeholder="Type your message here...">
-            <input id="chat-message-submit" type="button" value="Send">
-        </div>
+<div class="container my-4 position-relative">
+    <!-- Logout button at top-right above chat area -->
+    <a class="btn btn-outline-danger btn-sm logout-btn" href="{% url 'logout' %}">Logout</a>
+<br><br><br><br>
+    <!-- Chat messages area -->
+    <div id="chat-messages" class="position-relative">
+      <!-- Animated Chat Title -->
+      <h3 class="chat-title text-center mb-3">Chat Room</h3>
+<br>
+      <!-- Online Users Button inside chat area, below title -->
+      <button class="btn btn-sm btn-outline-primary" type="button" id="onlineUsersBtn"
+              data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers" data-bs-scroll="true"
+              style="position:absolute; top:10px; right:10px; z-index:15;">
+        Online Users
+      </button>
     </div>
 
-    <script>
-        const roomName = "{{ room_name }}";
+    <!-- Input box -->
+    <form id="chat-form" class="mt-3 d-flex">
+      <input id="chat-message-input" type="text" class="form-control me-2" placeholder="Type a message..." autocomplete="off">
+      <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
+    </form>
+</div>
 
-        const chatSocket = new WebSocket(
-            "wss://" + window.location.host + "/ws/chat/" + roomName + "/"
-        );
+<!-- Offcanvas for online users -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers" data-bs-scroll="true">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Online Users</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul id="online-users" class="list-group" style="background-color: black;color: green;"></ul>
+  </div>
+</div>
 
-        const chatLog = document.querySelector("#chat-log");
-        const messageInput = document.querySelector("#chat-message-input");
-        const messageSubmit = document.querySelector("#chat-message-submit");
+<!-- WebSocket + Chat JS -->
+<script>
+  const roomName = "{{ room_name }}";
+  const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const chatSocket = new WebSocket(
+    ws_scheme + '://' + window.location.host + '/ws/chat/' + roomName + '/'
+  );
 
-        function addMessage(user, message, color) {
-            const messageElem = document.createElement("div");
-            messageElem.classList.add("message");
-            messageElem.innerHTML = `<strong style="color:${color}">${user}:</strong> ${message}`;
-            chatLog.appendChild(messageElem);
-            chatLog.scrollTop = chatLog.scrollHeight;
-        }
+  const chatMessages = document.getElementById("chat-messages");
+  const chatForm = document.getElementById("chat-form");
+  const inputField = document.getElementById("chat-message-input");
+  const onlineUsers = document.getElementById("online-users");
+  const currentUser = "{{ request.user.username }}";
 
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const user = data.user || "Unknown";
-            const message = data.message || "";
-            const color = data.color || "#000000";
-            addMessage(user, message, color);
-        };
+  chatSocket.onmessage = function(e) {
+  const data = JSON.parse(e.data);
 
-        chatSocket.onclose = function(e) {
-            console.error("Chat socket closed unexpectedly");
-            addMessage("System", "Connection closed", "#888888");
-        };
+  // Current time
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' +
+                  now.getMinutes().toString().padStart(2,'0');
 
-        // Send message on Enter key
-        messageInput.addEventListener("keyup", function(e) {
-            if (e.key === "Enter") {
-                messageSubmit.click();
-            }
-        });
+  if (data.type === "user_list") {
+    onlineUsers.innerHTML = "";
+    data.users.forEach(u => {
+      let li = document.createElement("li");
+      li.className = "list-group-item";
+      li.textContent = u;
+      onlineUsers.appendChild(li);
+    });
+  } else {
+    const msg = document.createElement("div");
 
-        // Send message button
-        messageSubmit.onclick = function() {
-            const message = messageInput.value.trim();
-            if (message !== "") {
-                chatSocket.send(JSON.stringify({"message": message}));
-                messageInput.value = "";
-            }
-        };
+    if (data.user === "System") {
+      msg.className = "system";
+      msg.textContent = data.message + " (" + timeStr + ")";
+    } else {
+      msg.className = data.user === currentUser ? "message me" : "message other";
 
-        messageInput.focus();
-    </script>
+      // Create main message text
+      const textSpan = document.createElement("span");
+      textSpan.textContent = data.user === currentUser ? data.message : data.user + ": " + data.message;
+
+      // Create timestamp span
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "message-time";
+      timeSpan.textContent = timeStr;
+
+      msg.appendChild(textSpan);
+      msg.appendChild(timeSpan);
+    }
+
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+};
+
+  chatForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+    if (inputField.value.trim()) {
+      chatSocket.send(JSON.stringify({ "message": inputField.value }));
+      inputField.value = "";
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

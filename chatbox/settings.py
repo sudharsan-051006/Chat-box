@@ -58,9 +58,9 @@ ASGI_APPLICATION = "chatbox.asgi.application"
 # Database (use PostgreSQL if DATABASE_URL exists, else fallback to sqlite3)
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=config("DATABASE_URL"),  # use DATABASE_URL, not DATABASE_PUBLIC_URL
         conn_max_age=600,
-        ssl_require=False
+        ssl_require=True
     )
 }
 
