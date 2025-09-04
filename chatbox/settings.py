@@ -87,6 +87,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://chat-box-production-f612.up.railway.app",
+]
+
 # Localization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
