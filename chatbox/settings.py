@@ -8,7 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="insecure-secret-key")
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="*").split(",")
+ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1,.onrender.com").split(",")
+
 
 # Installed apps
 INSTALLED_APPS = [
@@ -88,8 +89,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://chat-box-production-f612.up.railway.app",
+    "https://chat-box-production-f612.up.railway.app",   # old Railway
+    "https://your-render-app-name.onrender.com",        # ✅ add Render domain
 ]
+
 
 # Localization
 LANGUAGE_CODE = "en-us"
@@ -100,5 +103,6 @@ USE_TZ = True
 # Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
