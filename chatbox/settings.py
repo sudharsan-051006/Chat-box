@@ -8,7 +8,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="insecure-secret-key")
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1,.onrender.com").split(",")
+ALLOWED_HOSTS = [
+    "chat-box-p0m8.onrender.com",
+    "127.0.0.1",
+    "localhost",
+]
 
 
 # Installed apps
@@ -90,7 +94,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://chat-box-production-f612.up.railway.app",   # old Railway
-    "https://your-render-app-name.onrender.com",        # ✅ add Render domain
+     "https://chat-box-p0m8.onrender.com",,        # ✅ add Render domain
 ]
 
 
