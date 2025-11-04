@@ -74,10 +74,11 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config("REDIS_URL", default="redis://127.0.0.1:6379")],
+            "hosts": [config("REDIS_URL")],
         },
     },
 }
+
 
 # Auth redirects
 LOGIN_URL = "/login/"
