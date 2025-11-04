@@ -9,4 +9,6 @@ urlpatterns = [
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path('', lambda request: redirect('chat/room1/')),
     path("chat/<str:room_name>/", views.room, name="room"),
+    path('password_change/', auth_views.PasswordChangeView.as_view(template_name='cb/password_change.html'), name='password_change'),
+    path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='cb/password_change_done.html'), name='password_change_done'),
 ]
