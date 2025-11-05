@@ -19,39 +19,17 @@
       position: relative;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
+
     .message-time {
-  display: block;
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.7); /* white for sender */
-  text-align: right;
-  margin-top: 2px;
-}
-
-.other .message-time {
-  color: rgba(0,0,0,0.6); /* dark for others' messages */
-}
-
-    /* Animated chat title */
-    .chat-title {
-      color: #dee2e6;
-      font-size: 2rem;
-      font-weight: bold;
-      position: absolute;      
-      top: 10px;                
-      left: 50%;
-      transform: translateX(-50%);
       display: block;
-      opacity: 0;
-      animation: flySequence 3s linear infinite;
-      z-index: 10;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.7);
+      text-align: right;
+      margin-top: 2px;
     }
 
-    @keyframes flySequence {
-      0% { transform: translate(-50%, -50px) scale(0.3); opacity: 0; }
-      10% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-      50% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-      60% { opacity: 0; }
-      100% { transform: translate(-50%, -50px) scale(0.3); opacity: 0; }
+    .other .message-time {
+      color: rgba(0,0,0,0.6);
     }
 
     /* Messages styling */
@@ -72,6 +50,7 @@
       display: block;
       width: fit-content;
     }
+
     .other {
       background: #e9ecef;
       color: #212529;
@@ -88,14 +67,6 @@
       background: none; 
     }
 
-    /* Online Users button */
-    #onlineUsersBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 15;
-    }
-
     /* Input styling */
     #chat-message-input {
       color: white;
@@ -103,51 +74,59 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    /* Logout button styling */
-    .logout-btn {
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      position: absolute;
-      right: 10px;
-      top: 20px;
-      z-index: 20;
-    }
+    .logout-btn { display: none; }
   </style>
 </head>
 <body>
 <div class="container my-4 position-relative">
-    <!-- Logout button at top-right above chat area -->
-    <a class="btn btn-outline-danger btn-sm logout-btn" href="{% url 'logout' %}">Logout</a>
-    <a href="/password_change/">Change Password</a>
-<br><br><br><br>
-    <!-- Chat messages area -->
-    <div id="chat-messages" class="position-relative">
-      <!-- Animated Chat Title -->
-      <h3 class="chat-title text-center mb-3">Chat Room</h3>
-<br>
-      <!-- Online Users Button inside chat area, below title -->
-      <button class="btn btn-sm btn-outline-primary" type="button" id="onlineUsersBtn"
-              data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers" data-bs-scroll="true"
-              style="position:absolute; top:10px; right:10px; z-index:15;">
-        Online Users
-      </button>
-    </div>
 
-    <!-- Input box -->
-    <form id="chat-form" class="mt-3 d-flex">
-      {% csrf_token %}
-      <input id="chat-message-input" type="text" class="form-control me-2" placeholder="Type a message..." autocomplete="off">
-      <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
-    </form>
+  <!-- Settings Dropdown -->
+  <div class="dropdown position-absolute" style="top:10px; right:10px; z-index:15;">
+    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="settingsDropdown"
+            data-bs-toggle="dropdown" aria-expanded="false">
+      ⚙️ Settings
+    </button>
+
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li>
+        <a class="dropdown-item" href="/password_change/">Change Password</a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+      </li>
+      <li>
+        <button class="dropdown-item" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers" data-bs-scroll="true">
+          Online Users
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <br><br><br><br>
+
+  <!-- Chat messages area -->
+  <div id="chat-messages" class="position-relative">
+    <h3 style="color: #e9ecef;">Chat Room</h3>
+    <br>
+  </div>
+
+  <!-- Input box -->
+  <form id="chat-form" class="mt-3 d-flex">
+    {% csrf_token %}
+    <input id="chat-message-input" type="text" class="form-control me-2" placeholder="Type a message..." autocomplete="off">
+    <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
+  </form>
 </div>
 
 <!-- Offcanvas for online users -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers" data-bs-scroll="true">
   <div class="offcanvas-header">
-    <h5 class="offcanvas-title">Online Users</h5>
+    <h5 class="offcanvas-title" id="online-users-title">Online Users (0)</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
   </div>
   <div class="offcanvas-body">
-    <ul id="online-users" class="list-group" style="background-color: black;color: green;"></ul>
+    <ul id="online-users" class="list-group" style="background-color: black; color: green;"></ul>
   </div>
 </div>
 
@@ -163,50 +142,55 @@
   const chatForm = document.getElementById("chat-form");
   const inputField = document.getElementById("chat-message-input");
   const onlineUsers = document.getElementById("online-users");
+  const onlineUsersTitle = document.getElementById("online-users-title");
   const currentUser = "{{ request.user.username }}";
 
   chatSocket.onmessage = function(e) {
-  const data = JSON.parse(e.data);
+    const data = JSON.parse(e.data);
 
-  // Current time
-  const now = new Date();
-  const timeStr = now.getHours().toString().padStart(2,'0') + ':' +
-                  now.getMinutes().toString().padStart(2,'0');
+    // Current time
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ':' +
+                    now.getMinutes().toString().padStart(2,'0');
 
-  if (data.type === "user_list") {
-    onlineUsers.innerHTML = "";
-    data.users.forEach(u => {
-      let li = document.createElement("li");
-      li.className = "list-group-item";
-      li.textContent = u;
-      onlineUsers.appendChild(li);
-    });
-  } else {
-    const msg = document.createElement("div");
+    if (data.type === "user_list") {
+      onlineUsers.innerHTML = "";
+      data.users.forEach(u => {
+        let li = document.createElement("li");
+        li.className = "list-group-item";
+        li.textContent = u;
+        onlineUsers.appendChild(li);
+      });
 
-    if (data.user === "System") {
-      msg.className = "system";
-      msg.textContent = data.message + " (" + timeStr + ")";
+      // Update user count in title
+      onlineUsersTitle.textContent = `Online Users (${data.users.length})`;
+
     } else {
-      msg.className = data.user === currentUser ? "message me" : "message other";
+      const msg = document.createElement("div");
 
-      // Create main message text
-      const textSpan = document.createElement("span");
-      textSpan.textContent = data.user === currentUser ? data.message : data.user + ": " + data.message;
+      if (data.user === "System") {
+        msg.className = "system";
+        msg.textContent = data.message + " (" + timeStr + ")";
+      } else {
+        msg.className = data.user === currentUser ? "message me" : "message other";
 
-      // Create timestamp span
-      const timeSpan = document.createElement("span");
-      timeSpan.className = "message-time";
-      timeSpan.textContent = timeStr;
+        // Message text
+        const textSpan = document.createElement("span");
+        textSpan.textContent = data.user === currentUser ? data.message : data.user + ": " + data.message;
 
-      msg.appendChild(textSpan);
-      msg.appendChild(timeSpan);
+        // Timestamp
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "message-time";
+        timeSpan.textContent = timeStr;
+
+        msg.appendChild(textSpan);
+        msg.appendChild(timeSpan);
+      }
+
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-
-    chatMessages.appendChild(msg);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-};
+  };
 
   chatForm.addEventListener("submit", function(e) {
     e.preventDefault();
