@@ -82,7 +82,7 @@ CHANNEL_LAYERS = {
 
 # Auth redirects
 LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/chat/room1/"
+LOGIN_REDIRECT_URL = "/"   
 LOGOUT_REDIRECT_URL = "/login/"
 
 # Password validation
