@@ -11,4 +11,6 @@ urlpatterns = [
     path("chat/<str:room_name>/", views.room, name="room"),
     path('password_change/', auth_views.PasswordChangeView.as_view(template_name='cb/password_change.html'), name='password_change'),
     path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='cb/password_change_done.html'), name='password_change_done'),
+    path('create/', views.create_room, name='create_room'),
+    path('chat/<str:room_name>/', views.room, name='room'),
 ]
