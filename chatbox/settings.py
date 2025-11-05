@@ -97,6 +97,9 @@ CSRF_TRUSTED_ORIGINS = [
      "https://chat-box-p0m8.onrender.com",     
 ]
 
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Localization
 LANGUAGE_CODE = "en-us"
