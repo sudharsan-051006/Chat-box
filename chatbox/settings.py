@@ -101,6 +101,8 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+print("💾 DATABASE:", os.environ.get("DATABASE_URL"))
+
 # Localization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
