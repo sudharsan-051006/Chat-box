@@ -94,12 +94,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-     "https://chat-box-p0m8.onrender.com",     
+    "https://chat-box-p0m8.onrender.com",
 ]
 
+# Trust Render's proxy and handle secure cookies correctly
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 print("💾 DATABASE:", os.environ.get("DATABASE_URL"))
 
