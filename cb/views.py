@@ -22,7 +22,7 @@ from .models import Room
 
 def index(request):
     rooms = Room.objects.all()
-    return render(request, 'index.html', {'rooms': rooms})
+    return render(request, 'cb/index.html', {'rooms': rooms})
 
 def create_room(request):
     if request.method == 'POST':
@@ -33,4 +33,4 @@ def create_room(request):
     return render(request, 'create_room.html')
 
 def room(request, room_name):
-    return render(request, 'room.html', {'room_name': room_name})
+    return render(request, 'cb/room.html', {'room_name': room_name})
