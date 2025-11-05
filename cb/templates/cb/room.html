@@ -209,6 +209,14 @@
     }
   };
 
+    // Leave room button
+  document.getElementById("leave-room-btn").addEventListener("click", function() {
+    if (chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.close(); // Gracefully disconnect
+    }
+    window.location.href = "/"; // Redirect back to index
+  });
+
   chatForm.addEventListener("submit", function(e) {
     e.preventDefault();
     if (inputField.value.trim()) {
