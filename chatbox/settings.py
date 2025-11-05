@@ -94,8 +94,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://chat-box-production-f612.up.railway.app",   # old Railway
-     "https://chat-box-p0m8.onrender.com",     # ✅ add Render domain
+     "https://chat-box-p0m8.onrender.com",     
 ]
 
 
