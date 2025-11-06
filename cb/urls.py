@@ -14,5 +14,6 @@ urlpatterns = [
     path('', views.index, name='index'),                         # 👈 Room list (create_room.html)
     path('create/', views.create_room, name='create_room'),       # 👈 Create new room
     path('chat/<str:room_name>/', views.room, name='room'), 
+    path('toggle_lock/<str:room_name>/', views.toggle_lock, name='toggle_lock'),
     # path('create-admin/', views.create_admin, name='create_admin'),
 ]
