@@ -212,12 +212,6 @@
         <ul class="dropdown-menu dropdown-menu-end">
           <li><a class="dropdown-item" href="/password_change/"><i class="fa-solid fa-key me-2"></i>Change Password</a></li>
           <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
-          <li>
-            <button class="dropdown-item" type="button" data-bs-toggle="offcanvas"
-                    data-bs-target="#offcanvasUsers">
-              <i class="fa-solid fa-users me-2"></i>Online Users
-            </button>
-          </li>
         </ul>
       </div>
 
@@ -245,7 +239,7 @@
           </a>
         {% endfor %}
       {% else %}
-        <p class="text-muted text-center mt-2"><i class="fa-solid fa-circle-info me-2"></i>No rooms created yet.</p>
+        <p class="primary text-muted text-center mt-2"><i class="fa-solid fa-circle-info me-2"></i>No rooms created yet.</p>
       {% endif %}
     </div>
   </main>
