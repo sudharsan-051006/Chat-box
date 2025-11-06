@@ -5,6 +5,11 @@ from .models import Room
 from django.http import HttpResponse
 from django.core.management import call_command
 from django.contrib.auth.models import User
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
+from django.contrib import messages
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 
 # 🧱 SIGNUP VIEW
 def signup(request):
@@ -39,17 +44,35 @@ def create_room(request):
 
 
 # 💬 JOIN SPECIFIC ROOM
-@login_required(login_url="/login/")
+@login_required
 def room(request, room_name):
-    """Join a specific chat room."""
-    return render(request, 'cb/room.html', {'room_name': room_name})
+    room = Room.objects.get(name=room_name)
 
-def create_admin(request):
-    try:
-        if not User.objects.filter(username='admin').exists():
-            User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-            return HttpResponse("✅ Superuser 'admin' created successfully! (username: admin, password: admin123)")
-        else:
-            return HttpResponse("ℹ️ Superuser 'admin' already exists.")
-    except Exception as e:
-        return HttpResponse(f"❌ Error creating superuser: {str(e)}")
+    # ✅ Prevent new users if room is locked
+    if room.is_locked and request.user != room.created_by:
+        return HttpResponseForbidden("🚫 This room is locked by the creator.")
+
+    return render(request, 'cb/room.html', {'room_name': room_name, 'room': room}
+
+@login_required
+def create_room(request):
+    if request.method == 'POST':
+        room_name = request.POST['room_name']
+        room, created = Room.objects.get_or_create(
+            name=room_name,
+            defaults={'created_by': request.user}  # ✅ save creator
+        )
+        return redirect('room', room_name=room_name)
+
+@login_required
+def toggle_lock(request, room_name):
+    room = get_object_or_404(Room, name=room_name)
+
+    if room.created_by != request.user:
+        return HttpResponseForbidden("❌ You are not allowed to lock this room.")
+
+    room.is_locked = not room.is_locked
+    room.save()
+    msg = "🔒 Room locked" if room.is_locked else "🔓 Room unlocked"
+    messages.success(request, msg)
+    return HttpResponseRedirect(reverse('room', args=[room_name]))
