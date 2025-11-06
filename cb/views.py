@@ -82,25 +82,41 @@ def toggle_lock(request, room_name):
 
 
 def fix_missing_columns(request):
+    """One-time repair: adds missing columns (created_by_id, is_locked) to cb_room."""
     try:
         with connection.cursor() as cursor:
-            # Add missing column manually (if it doesn't exist)
+            # 🧱 Add created_by_id (FK → auth_user)
             cursor.execute("""
                 DO $$
                 BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1 FROM information_schema.columns
-                        WHERE table_name='cb_room' AND column_name='created_by_id'
-                    ) THEN
-                        ALTER TABLE cb_room ADD COLUMN created_by_id INTEGER REFERENCES auth_user(id);
-                    END IF;
+                  IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'cb_room' AND column_name = 'created_by_id'
+                  ) THEN
+                    ALTER TABLE cb_room
+                    ADD COLUMN created_by_id INTEGER REFERENCES auth_user(id);
+                  END IF;
                 END$$;
             """)
 
-        # Now tell Django to make sure migrations match
-        call_command('makemigrations', 'cb')
-        call_command('migrate', '--fake-initial')
+            # 🔒 Add is_locked flag
+            cursor.execute("""
+                DO $$
+                BEGIN
+                  IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'cb_room' AND column_name = 'is_locked'
+                  ) THEN
+                    ALTER TABLE cb_room
+                    ADD COLUMN is_locked BOOLEAN NOT NULL DEFAULT FALSE;
+                  END IF;
+                END$$;
+            """)
 
-        return HttpResponse("✅ Column fixed and migrations synced successfully.")
+        # 🧭 Sync model migrations to DB (fake existing tables)
+        call_command("makemigrations", "cb", verbosity=1)
+        call_command("migrate", "--fake-initial", verbosity=1)
+
+        return HttpResponse("✅ Columns created_or_verified & migrations synced successfully.")
     except Exception as e:
-        return HttpResponse(f"❌ Error while fixing: {str(e)}")
+        return HttpResponse(f"❌ Error while fixing: {str(e)}", status=500)
