@@ -52,7 +52,7 @@ def room(request, room_name):
     if room.is_locked and request.user != room.created_by:
         return HttpResponseForbidden("🚫 This room is locked by the creator.")
 
-    return render(request, 'cb/room.html', {'room_name': room_name, 'room': room}
+    return render(request, 'cb/room.html', {'room_name': room_name, 'room': room})
 
 @login_required
 def create_room(request):
