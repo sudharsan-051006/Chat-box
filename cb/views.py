@@ -42,4 +42,11 @@ def create_room(request):
 def room(request, room_name):
     """Join a specific chat room."""
     return render(request, 'cb/room.html', {'room_name': room_name})
-    
+
+def run_migrations(request):
+    try:
+        call_command('makemigrations', 'cb')
+        call_command('migrate')
+        return HttpResponse("✅ Migrations applied successfully.")
+    except Exception as e:
+        return HttpResponse(f"❌ Migration error: {str(e)}")
