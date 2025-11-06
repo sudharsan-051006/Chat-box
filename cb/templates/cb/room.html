@@ -53,29 +53,33 @@
 
 
   .me {
-   background: blue;
-    color: #fff;
-    margin-left: auto;
-    text-align: right;
-    display: block;
-    max-width: 70%;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-    border-radius: 1rem 1rem 0 1rem;
+  background: blue;
+  color: #fff;
+  margin-left: auto;
+  text-align: left;              /* ✅ keep text readable */
+  display: inline-block;         /* ✅ bubble fits text content */
+  max-width: 70%;                /* ✅ prevent overly long lines */
+  min-width: 30px;               /* ✅ small safety width */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  border-radius: 1rem 1rem 0 1rem;
+  padding: 0.4rem 0.8rem;
   }
 
     .other {
-      background: #e9ecef;
-      color: #212529;
-      margin-right: auto;
-      text-align: left;
-      display: block;
-      max-width: 70%;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-      border-radius: 1rem 1rem 1rem 0;
+  background: #e9ecef;
+  color: #212529;
+  margin-right: auto;
+  text-align: left;
+  display: inline-block;         /* ✅ bubble shrinks naturally */
+  max-width: 70%;
+  min-width: 30px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  border-radius: 1rem 1rem 1rem 0;
+  padding: 0.4rem 0.8rem;
     }
 
     .system { 
