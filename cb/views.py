@@ -2,7 +2,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Room
-
+from django.http import HttpResponse
+from django.core.management import call_command
 
 # 🧱 SIGNUP VIEW
 def signup(request):
