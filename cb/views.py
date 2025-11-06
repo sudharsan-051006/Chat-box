@@ -41,3 +41,7 @@ def create_room(request):
 def room(request, room_name):
     """Join a specific chat room."""
     return render(request, 'cb/room.html', {'room_name': room_name})
+
+def run_migrations(request):
+    call_command("migrate")
+    return HttpResponse("✅ Migrations completed successfully.")
