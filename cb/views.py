@@ -44,5 +44,6 @@ def room(request, room_name):
     return render(request, 'cb/room.html', {'room_name': room_name})
 
 def run_migrations(request):
+    call_command("makemigrations", "cb")
     call_command("migrate")
-    return HttpResponse("✅ Migrations completed successfully.")
+    return HttpResponse("✅ Migrations completed successfully! You can now remove this route.")
