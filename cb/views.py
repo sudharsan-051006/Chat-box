@@ -76,3 +76,12 @@ def toggle_lock(request, room_name):
     msg = "🔒 Room locked" if room.is_locked else "🔓 Room unlocked"
     messages.success(request, msg)
     return HttpResponseRedirect(reverse('room', args=[room_name]))
+
+
+def run_migrations(request):
+    try:
+        call_command('makemigrations', 'cb')
+        call_command('migrate')
+        return HttpResponse("✅ Migrations applied successfully.")
+    except Exception as e:
+        return HttpResponse(f"❌ Migration error: {str(e)}")
