@@ -9,16 +9,22 @@
     body { background: rgb(69, 68, 68); }
 
     /* Chat messages area */
-    #chat-messages {
-      height: 65vh;
-      overflow-y: auto;
-      padding: 2rem 1rem 1rem 1rem;
-      border: 1px solid red;
-      border-radius: .5rem;
-      background: black;
-      position: relative;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
+#chat-messages {
+  height: 65vh;
+  overflow-y: auto;
+  padding: 2rem 1rem 1rem 1rem;
+  border: 1px solid red;
+  border-radius: .5rem;
+  background: black;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+
+  /* ✅ NEW - make it flex column so alignment works */
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 
     .message-time {
       display: block;
@@ -34,45 +40,39 @@
 
     /* Messages styling */
     .message {
-      display: inline-block;
-      margin-bottom: 0.75rem;
-      padding: 0.4rem 0.8rem;
-      border-radius: 1rem;
-
-  /* 🔧 FIX START — text wrapping and width */
-      word-break: break-word;         /* breaks long unspaced words (better than word-wrap) */
-      overflow-wrap: anywhere;        /* modern browser support for natural breaks */
-      white-space: pre-wrap;          /* preserves newlines and wraps properly */
-      max-width: 70%;                 /* ensures message bubbles never exceed this width */
-      box-sizing: border-box;         /* ensures padding stays inside max-width */
-  /* 🔧 FIX END */
-
-      font-size: 1rem;
-      line-height: 1.4;
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  max-width: 70%;
+  font-size: 1rem;
+  line-height: 1.4;
   }
 
 
-  .me {
+.me {
   background: blue;
   color: #fff;
-  margin-left: auto;
-  text-align: left;              /* ✅ keep text readable */
-  display: inline-block;         /* ✅ bubble fits text content */
-  max-width: 70%;                /* ✅ prevent overly long lines */
-  min-width: 30px;               /* ✅ small safety width */
+  align-self: flex-end;      /* ✅ Right align my messages */
+  text-align: left;
+  display: inline-block;
+  max-width: 70%;
+  min-width: 30px;
   word-break: break-word;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   border-radius: 1rem 1rem 0 1rem;
   padding: 0.4rem 0.8rem;
-  }
+}
 
-    .other {
+.other {
   background: #e9ecef;
   color: #212529;
-  margin-right: auto;
+  align-self: flex-start;    /* ✅ Left align others’ messages */
   text-align: left;
-  display: inline-block;         /* ✅ bubble shrinks naturally */
+  display: inline-block;
   max-width: 70%;
   min-width: 30px;
   word-break: break-word;
@@ -80,7 +80,8 @@
   white-space: pre-wrap;
   border-radius: 1rem 1rem 1rem 0;
   padding: 0.4rem 0.8rem;
-    }
+}
+
 
     .system { 
       text-align: center; 
