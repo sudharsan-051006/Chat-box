@@ -38,18 +38,32 @@
       margin-bottom: 0.75rem;
       padding: 0.4rem 0.8rem;
       border-radius: 1rem;
-      word-wrap: break-word;
-      max-width: 70%;
-    }
 
-    .me {
-      background: blue;
-      color: #fff;
-      margin-left: auto;
-      text-align: right;
-      display: block;
-      width: fit-content;
-    }
+  /* 🔧 FIX START — text wrapping and width */
+      word-break: break-word;         /* breaks long unspaced words (better than word-wrap) */
+      overflow-wrap: anywhere;        /* modern browser support for natural breaks */
+      white-space: pre-wrap;          /* preserves newlines and wraps properly */
+      max-width: 70%;                 /* ensures message bubbles never exceed this width */
+      box-sizing: border-box;         /* ensures padding stays inside max-width */
+  /* 🔧 FIX END */
+
+      font-size: 1rem;
+      line-height: 1.4;
+  }
+
+
+  .me {
+   background: blue;
+    color: #fff;
+    margin-left: auto;
+    text-align: right;
+    display: block;
+    max-width: 70%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    border-radius: 1rem 1rem 0 1rem;
+  }
 
     .other {
       background: #e9ecef;
@@ -57,7 +71,11 @@
       margin-right: auto;
       text-align: left;
       display: block;
-      width: fit-content;
+      max-width: 70%;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      border-radius: 1rem 1rem 1rem 0;
     }
 
     .system { 
