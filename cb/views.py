@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 
+
 # 🧱 SIGNUP VIEW
 def signup(request):
     if request.method == "POST":
