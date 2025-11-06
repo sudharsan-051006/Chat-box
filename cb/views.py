@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Room
 from django.http import HttpResponse
 from django.core.management import call_command
+from django.contrib.auth.models import User
 
 # 🧱 SIGNUP VIEW
 def signup(request):
@@ -43,10 +44,12 @@ def room(request, room_name):
     """Join a specific chat room."""
     return render(request, 'cb/room.html', {'room_name': room_name})
 
-def run_migrations(request):
+def create_admin(request):
     try:
-        call_command('makemigrations', 'cb')
-        call_command('migrate')
-        return HttpResponse("✅ Migrations applied successfully.")
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+            return HttpResponse("✅ Superuser 'admin' created successfully! (username: admin, password: admin123)")
+        else:
+            return HttpResponse("ℹ️ Superuser 'admin' already exists.")
     except Exception as e:
-        return HttpResponse(f"❌ Migration error: {str(e)}")
+        return HttpResponse(f"❌ Error creating superuser: {str(e)}")
