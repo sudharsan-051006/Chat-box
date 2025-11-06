@@ -115,6 +115,20 @@
         <a class="dropdown-item" href="/password_change/">Change Password</a>
       </li>
       <li>
+  {% if request.user.username == room.created_by.username %}
+  <form method="POST" action="{% url 'toggle_lock' room.name %}">
+    {% csrf_token %}
+    <button class="dropdown-item text-warning" type="submit">
+      {% if room.is_locked %}
+        🔓 Unlock Room
+      {% else %}
+        🔒 Lock Room
+      {% endif %}
+    </button>
+  </form>
+  {% endif %}
+</li>
+      <li>
         <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
       </li>
       <li>
