@@ -5,13 +5,12 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from cb.models import Room
 
-ROOM_USERS = {}      # Tracks active users in memory
-ROOM_TIMERS = {}     # Tracks auto-delete timers
+ROOM_USERS = {}     # {room_name: [usernames]}
+ROOM_TIMERS = {}    # {room_name: asyncio task}
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
-    # Fetch room from DB
     @database_sync_to_async
     def get_room(self, name):
         try:
@@ -19,22 +18,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Room.DoesNotExist:
             return None
 
-    # Add user to allowed list (DB)
     @database_sync_to_async
     def add_allowed_user(self, room, user):
+        """✅ Store user in allowed list DB"""
         room.allowed_users.add(user)
+        room.save()
 
-    # Check if user is allowed (DB)
     @database_sync_to_async
     def user_is_allowed(self, room, user):
+        """✅ Check if existing user already allowed"""
         return room.allowed_users.filter(id=user.id).exists()
 
-    # ✅ Connection handling
-    async def connect(self):
-        self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
-        self.room_group_name = f"chat_{self.room_name}"
 
+    async def connect(self):
+        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_group_name = f"chat_{self.room_name}"
         user = self.scope["user"]
+
         if not user.is_authenticated:
             await self.close()
             return
@@ -44,27 +44,32 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        # ✅ Check if user is already allowed
+        # ✅ Check if user already allowed
         is_allowed = await self.user_is_allowed(room, user)
 
-        # 🚫 If room is locked and user not allowed → block join
+        # 🚫 Room is locked & user not allowed → deny
         if room.is_locked and not is_allowed:
+            print(f"⛔ User '{user.username}' blocked (room locked)")
             await self.close()
             return
 
-        # ✅ If room unlocked & user not allowed → add them first time
-        if not is_allowed:
+        # ✅ Room unlocked AND user not in allowed list → add now
+        if not room.is_locked and not is_allowed:
             await self.add_allowed_user(room, user)
+
+        # ✅ (IMPORTANT) If room locked & user is allowed → allow entry
+        if room.is_locked and is_allowed:
+            print(f"✅ '{user.username}' allowed to rejoin locked room")
 
         self.user_name = user.username
         self.user_color = random.choice(["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"])
 
-        # Track user in active list (in memory)
+        # Track active users in memory
         ROOM_USERS.setdefault(self.room_group_name, [])
         if self.user_name not in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].append(self.user_name)
 
-        # Cancel room auto-delete if timer exists
+        # Cancel deletion timer if user joins again
         if self.room_group_name in ROOM_TIMERS:
             ROOM_TIMERS[self.room_group_name].cancel()
             del ROOM_TIMERS[self.room_group_name]
@@ -72,13 +77,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        # Notify others that someone joined
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "user_join", "user": self.user_name}
         )
 
-    # ✅ Disconnect logic
+
     async def disconnect(self, close_code):
         if self.room_group_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].remove(self.user_name)
@@ -90,15 +94,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-        # Schedule room deletion if empty
+        # Delete room if no active users after 30 seconds
         if not ROOM_USERS.get(self.room_group_name):
             ROOM_TIMERS[self.room_group_name] = asyncio.create_task(self.delete_room_after_timeout())
 
-    # ✅ Auto-delete empty room after 30s
+
     async def delete_room_after_timeout(self):
         await asyncio.sleep(30)
-
-        if not ROOM_USERS.get(self.room_group_name):  # Still empty?
+        if not ROOM_USERS.get(self.room_group_name):
             try:
                 await asyncio.to_thread(Room.objects.filter(name=self.room_name).delete)
                 print(f"🗑️ Room '{self.room_name}' deleted (empty for 30s)")
@@ -108,7 +111,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ROOM_USERS.pop(self.room_group_name, None)
             ROOM_TIMERS.pop(self.room_group_name, None)
 
-    # ✅ Handle incoming messages
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data.get("message", "").strip()
@@ -125,7 +128,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-    # ✅ Broadcast chat messages
+
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             "type": "chat",
@@ -134,7 +137,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "color": event["color"],
         }))
 
-    # ✅ Broadcast join
+
     async def user_join(self, event):
         await self.send(text_data=json.dumps({
             "type": "chat",
@@ -144,7 +147,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         await self.send_user_list()
 
-    # ✅ Broadcast leave
+
     async def user_leave(self, event):
         await self.send(text_data=json.dumps({
             "type": "chat",
@@ -154,7 +157,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         await self.send_user_list()
 
-    # ✅ Send updated list of users
+
     async def send_user_list(self):
         users = ROOM_USERS.get(self.room_group_name, [])
         await self.send(text_data=json.dumps({
