@@ -17,5 +17,4 @@ urlpatterns = [
     path('toggle_lock/<str:room_name>/', views.toggle_lock, name='toggle_lock'),
     # path('create-admin/', views.create_admin, name='create_admin'),
     path('run-migrate/', views.run_migrations, name='run_migrations'),
-    path("fix-columns/", views.fix_missing_columns, name="fix_columns"),
 ]
