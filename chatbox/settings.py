@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="insecure-secret-key")
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = [
     "chat-box-p0m8.onrender.com",
     "127.0.0.1",
