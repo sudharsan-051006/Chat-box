@@ -70,31 +70,33 @@ def create_room(request):
 
 @login_required
 def toggle_lock(request, room_name):
-    room = get_object_or_404(Room, name=room_name)
-
-    if request.user == room.created_by or request.user.is_superuser:
-        room.is_locked = not room.is_locked
-        room.save()
-        return JsonResponse({"status": "success", "locked": room.is_locked})
+    if request.method == "POST":
+        room = get_object_or_404(Room, name=room_name)
+        if request.user == room.created_by:
+            room.is_locked = not room.is_locked
+            room.save()
+            return JsonResponse({"status": "success", "locked": room.is_locked})
+        else:
+            return JsonResponse({"status": "error", "message": "You are not allowed to lock this room."}, status=403)
     else:
-        return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
+        return JsonResponse({"status": "error", "message": "Invalid request method."}, status=400)
 
-def fix_allowed_users_table(request):
-    """Create the missing cb_room_allowed_users table if it doesn't exist"""
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-            CREATE TABLE IF NOT EXISTS cb_room_allowed_users (
-                id SERIAL PRIMARY KEY,
-                room_id INTEGER NOT NULL REFERENCES cb_room(id) ON DELETE CASCADE,
-                user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
-                UNIQUE (room_id, user_id)
-            );
-            """)
-        return HttpResponse("✅ cb_room_allowed_users table created successfully!")
-    except Exception as e:
-        return HttpResponse(f"❌ Error while creating table: {e}")
-# def run_migrations(request):
+# def fix_allowed_users_table(request):
+#     """Create the missing cb_room_allowed_users table if it doesn't exist"""
+#     try:
+#         with connection.cursor() as cursor:
+#             cursor.execute("""
+#             CREATE TABLE IF NOT EXISTS cb_room_allowed_users (
+#                 id SERIAL PRIMARY KEY,
+#                 room_id INTEGER NOT NULL REFERENCES cb_room(id) ON DELETE CASCADE,
+#                 user_id INTEGER NOT NULL REFERENCES auth_user(id) ON DELETE CASCADE,
+#                 UNIQUE (room_id, user_id)
+#             );
+#             """)
+#         return HttpResponse("✅ cb_room_allowed_users table created successfully!")
+#     except Exception as e:
+#         return HttpResponse(f"❌ Error while creating table: {e}")
+# # def run_migrations(request):
 #     try:
 #         call_command('makemigrations', 'cb')
 #         call_command('migrate')
