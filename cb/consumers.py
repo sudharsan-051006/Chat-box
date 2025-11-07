@@ -5,11 +5,13 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from cb.models import Room
 
-ROOM_USERS = {}
-ROOM_TIMERS = {}
+ROOM_USERS = {}      # Tracks active users in memory
+ROOM_TIMERS = {}     # Tracks auto-delete timers
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
+    # Fetch room from DB
     @database_sync_to_async
     def get_room(self, name):
         try:
@@ -17,16 +19,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Room.DoesNotExist:
             return None
 
+    # Add user to allowed list (DB)
     @database_sync_to_async
     def add_allowed_user(self, room, user):
         room.allowed_users.add(user)
 
+    # Check if user is allowed (DB)
     @database_sync_to_async
     def user_is_allowed(self, room, user):
         return room.allowed_users.filter(id=user.id).exists()
 
+    # ✅ Connection handling
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
         user = self.scope["user"]
@@ -39,25 +44,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        # ✅ Always add user to allowed list on join (1st time only)
-        await self.add_allowed_user(room, user)
+        # ✅ Check if user is already allowed
+        is_allowed = await self.user_is_allowed(room, user)
 
-        # ✅ If room is locked, only previously allowed users can rejoin
-        if room.is_locked:
-            is_allowed = await self.user_is_allowed(room, user)
-            if not is_allowed:
-                await self.close()
-                return
+        # 🚫 If room is locked and user not allowed → block join
+        if room.is_locked and not is_allowed:
+            await self.close()
+            return
+
+        # ✅ If room unlocked & user not allowed → add them first time
+        if not is_allowed:
+            await self.add_allowed_user(room, user)
 
         self.user_name = user.username
         self.user_color = random.choice(["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"])
 
-        # Track user presence in memory
+        # Track user in active list (in memory)
         ROOM_USERS.setdefault(self.room_group_name, [])
         if self.user_name not in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].append(self.user_name)
 
-        # Cancel deletion timer if user returns
+        # Cancel room auto-delete if timer exists
         if self.room_group_name in ROOM_TIMERS:
             ROOM_TIMERS[self.room_group_name].cancel()
             del ROOM_TIMERS[self.room_group_name]
@@ -65,12 +72,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        # Notify other users
+        # Notify others that someone joined
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "user_join", "user": self.user_name}
         )
 
+    # ✅ Disconnect logic
     async def disconnect(self, close_code):
         if self.room_group_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].remove(self.user_name)
@@ -82,13 +90,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-        # Start 30s timer → delete room if empty
+        # Schedule room deletion if empty
         if not ROOM_USERS.get(self.room_group_name):
             ROOM_TIMERS[self.room_group_name] = asyncio.create_task(self.delete_room_after_timeout())
 
+    # ✅ Auto-delete empty room after 30s
     async def delete_room_after_timeout(self):
         await asyncio.sleep(30)
-        if not ROOM_USERS.get(self.room_group_name):
+
+        if not ROOM_USERS.get(self.room_group_name):  # Still empty?
             try:
                 await asyncio.to_thread(Room.objects.filter(name=self.room_name).delete)
                 print(f"🗑️ Room '{self.room_name}' deleted (empty for 30s)")
@@ -98,6 +108,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ROOM_USERS.pop(self.room_group_name, None)
             ROOM_TIMERS.pop(self.room_group_name, None)
 
+    # ✅ Handle incoming messages
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data.get("message", "").strip()
@@ -114,6 +125,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
+    # ✅ Broadcast chat messages
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             "type": "chat",
@@ -122,6 +134,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "color": event["color"],
         }))
 
+    # ✅ Broadcast join
     async def user_join(self, event):
         await self.send(text_data=json.dumps({
             "type": "chat",
@@ -131,6 +144,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         await self.send_user_list()
 
+    # ✅ Broadcast leave
     async def user_leave(self, event):
         await self.send(text_data=json.dumps({
             "type": "chat",
@@ -140,6 +154,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         await self.send_user_list()
 
+    # ✅ Send updated list of users
     async def send_user_list(self):
         users = ROOM_USERS.get(self.room_group_name, [])
         await self.send(text_data=json.dumps({
