@@ -120,10 +120,10 @@ def toggle_lock(request, room_name):
 #         return HttpResponse("✅ Columns created_or_verified & migrations synced successfully.")
 #     except Exception as e:
 #         return HttpResponse(f"❌ Error while fixing: {str(e)}", status=500)
-def run_migrations(request):
-    try:
-        call_command('makemigrations', 'cb')
-        call_command('migrate')
-        return HttpResponse("✅ Migrations applied successfully.")
-    except Exception as e:
-        return HttpResponse(f"❌ Migration error: {str(e)}")
+# def run_migrations(request):
+#     try:
+#         call_command('makemigrations', 'cb')
+#         call_command('migrate')
+#         return HttpResponse("✅ Migrations applied successfully.")
+#     except Exception as e:
+#         return HttpResponse(f"❌ Migration error: {str(e)}")
