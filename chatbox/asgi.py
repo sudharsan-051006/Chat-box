@@ -21,6 +21,7 @@ import cb.routing
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
-    "websocket": AuthMiddlewareStack(URLRouter(cb.routing.websocket_urlpatterns))
+    "websocket": AuthMiddlewareStack(
+        URLRouter(cb.routing.websocket_urlpatterns)
     ),
 })
