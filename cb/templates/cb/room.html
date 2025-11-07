@@ -115,18 +115,18 @@
         <a class="dropdown-item" href="/password_change/">Change Password</a>
       </li>
       <li>
-  {% if request.user.username == room.created_by.username %}
-  <form method="POST" action="{% url 'toggle_lock' room.name %}">
-    {% csrf_token %}
-    <button class="dropdown-item text-warning" type="submit">
-      {% if room.is_locked %}
-        🔓 Unlock Room
-      {% else %}
-        🔒 Lock Room
-      {% endif %}
-    </button>
-  </form>
+{% if request.user.username == room.created_by.username %}
+<button 
+  id="lock-toggle-btn" 
+  class="dropdown-item text-warning" 
+  data-room="{{ room.name }}">
+  {% if room.is_locked %}
+    🔓 Unlock Room
+  {% else %}
+    🔒 Lock Room
   {% endif %}
+</button>
+{% endif %}
 </li>
       <li>
         <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
@@ -258,6 +258,38 @@
     }
     window.location.href = "/"; // Redirect back to index
   });
+  document.getElementById("lock-toggle-btn")?.addEventListener("click", async function() {
+  const roomName = this.dataset.room;
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+  try {
+    const res = await fetch(`/room/${roomName}/toggle-lock/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      }
+    });
+
+    const data = await res.json();
+
+    if (data.status === "success") {
+      const btn = document.getElementById("lock-toggle-btn");
+      if (data.locked) {
+        btn.textContent = "🔓 Unlock Room";
+        alert("🔒 Room is now locked!");
+      } else {
+        btn.textContent = "🔒 Lock Room";
+        alert("✅ Room is now unlocked!");
+      }
+    } else {
+      alert("⚠️ Error toggling lock");
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Server error while toggling lock");
+  }
+});
 
   chatForm.addEventListener("submit", function(e) {
     e.preventDefault();
