@@ -71,15 +71,12 @@ def create_room(request):
 def toggle_lock(request, room_name):
     room = get_object_or_404(Room, name=room_name)
 
-    if room.created_by != request.user:
-        return HttpResponseForbidden("❌ You are not allowed to lock this room.")
-
-    room.is_locked = not room.is_locked
-    room.save()
-    msg = "🔒 Room locked" if room.is_locked else "🔓 Room unlocked"
-    messages.success(request, msg)
-    return HttpResponseRedirect(reverse('room', args=[room_name]))
-
+    if request.user == room.created_by or request.user.is_superuser:
+        room.is_locked = not room.is_locked
+        room.save()
+        return JsonResponse({"status": "success", "locked": room.is_locked})
+    else:
+        return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
 
 # def fix_missing_columns(request):
 #     """One-time repair: adds missing columns (created_by_id, is_locked) to cb_room."""
