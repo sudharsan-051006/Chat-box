@@ -4,14 +4,13 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from cb.models import Room
+from cb.huffman_codec import encode_text, decode_text     # ✅ NEW IMPORT
 
-ROOM_USERS = {}     # stores online users in memory
-ROOM_TIMERS = {}    # stores deletion timers
-
+ROOM_USERS = {}
+ROOM_TIMERS = {}
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
-    # ✅ Ensure attributes exist before connect()
     user_name = None
     user_color = None
 
@@ -46,25 +45,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         is_allowed = await self.user_is_allowed(room, user)
 
-        # 🔒 Reject if room locked and user is not allowed
         if room.is_locked and not is_allowed:
             await self.close(code=403)
             return
 
-        # ✅ Add user automatically to allowed list in unlocked rooms
         if not room.is_locked and not is_allowed:
             await self.add_allowed_user(room, user)
 
-        # ✅ Assign user properties
         self.user_name = user.username
-        self.user_color = random.choice(["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"])
+        self.user_color = random.choice(
+            ["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"]
+        )
 
-        # Track active users in memory
         ROOM_USERS.setdefault(self.room_group_name, [])
         if self.user_name not in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].append(self.user_name)
 
-        # If a deletion timer was created earlier for an empty room, cancel it
         if self.room_group_name in ROOM_TIMERS:
             ROOM_TIMERS[self.room_group_name].cancel()
             del ROOM_TIMERS[self.room_group_name]
@@ -72,31 +68,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        # Notify others
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "user_join", "user": self.user_name},
         )
 
     async def disconnect(self, close_code):
-
-        # ✅ Prevent crash if user_name never got assigned (connect() failed earlier)
         if not self.user_name:
             return
 
-        # Remove the user from the list
         if self.room_group_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].remove(self.user_name)
 
-        # Notify others
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "user_leave", "user": self.user_name},
         )
-
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-        # ✅ Auto-delete room if empty
         if not ROOM_USERS.get(self.room_group_name):
             ROOM_TIMERS[self.room_group_name] = asyncio.create_task(
                 self.delete_room_after_timeout()
@@ -119,13 +108,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not message:
             return
 
+        # ✅ Huffman Encoding
+        encoded_msg, tree = encode_text(message)
+
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "chat_message", "message": message, "user": self.user_name, "color": self.user_color},
+            {
+                "type": "chat_message",
+                "message": encoded_msg,
+                "user": self.user_name,
+                "color": self.user_color,
+                "tree": tree,   # pass tree for decoding
+            },
         )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps(event))
+        encoded = event["message"]
+        tree = event["tree"]
+
+        # ✅ Huffman Decoding
+        decoded = decode_text(encoded, tree)
+
+        await self.send(text_data=json.dumps({
+            "type": "chat",
+            "message": decoded,
+            "user": event["user"],
+            "color": event["color"],
+        }))
 
     async def user_join(self, event):
         await self.send(text_data=json.dumps({
