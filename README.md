@@ -14,6 +14,7 @@ The app is deployed on Railway.
 - Admin panel to manage users
 - WebSocket-based communication with Django Channels
 - Responsive UI with Bootstrap 5
+- Huffman Codeing to Compress the Messages generated 
 
 ---
 
