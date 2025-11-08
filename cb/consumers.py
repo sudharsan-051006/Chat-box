@@ -131,7 +131,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send_user_list()
 
     async def send_user_list(self):
+       await self.channel_layer.group_send(
+           self.room_group_name,
+           {
+              "type": "broadcast_user_list",
+               "users": ROOM_USERS.get(self.room_group_name, []),
+           }
+       )
+    async def broadcast_user_list(self, event):
         await self.send(text_data=json.dumps({
             "type": "user_list",
-            "users": ROOM_USERS.get(self.room_group_name, []),
+            "users": event["users"],
         }))
