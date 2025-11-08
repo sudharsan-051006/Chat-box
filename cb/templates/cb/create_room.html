@@ -287,8 +287,13 @@
 
   <!-- Bootstrap JS -->
   <script>
-const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-const chatSocket = new WebSocket(ws_scheme + '://' + window.location.host + '/ws/chat/lobby/');
+// ✅ Automatically choose ws:// or wss:// based on HTTPS
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+
+const chatSocket = new WebSocket(
+    `${protocol}://${window.location.host}/ws/chat/${roomName}/`
+);
+
 
 const onlineUsers = document.getElementById("online-users");
 const onlineUsersTitle = document.getElementById("online-users-title");
