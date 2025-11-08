@@ -17,7 +17,7 @@
   <style>
     /* General Layout */
     body {
-      background-color: white;
+      background-image: url("{% static 'images/wall.jpg' %}");
       color: #ffffff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -36,7 +36,7 @@
 
     /* Card Styling */
     .card {
-      background: white;
+      background: black;
       border: 1px solid #2c2c2c;
       border-radius: 12px;
       padding: 2rem;
@@ -44,6 +44,10 @@
       max-width: 420px;
       box-shadow: 0 6px 20px black;
       position: relative;
+    }
+
+    .card:hover{
+      background-image: linear-gradient(to right, white, black);
     }
 
     .card h2 {
@@ -55,13 +59,14 @@
 
     /* Buttons and Form */
     .form-control {
-      background-color: #2b2b2b;
+      background-color: white;
       border: none;
       color: #fff;
+      box-shadow: 0 6px 20px black;
     }
 
     .form-control:focus {
-      background-color: #333;
+      background-image: linear-gradient(to right, white, black);
       color: #fff;
       box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25);
     }
@@ -89,14 +94,13 @@
       border: 1px solid #333;
       border-radius: 8px;
     }
-
     .dropdown-item {
       color: #e0e0e0;
       transition: 0.2s;
     }
 
     .dropdown-item:hover {
-      background-color: #2c2c2c;
+      background-image: linear-gradient(to right, white, black);
       color: #0dcaf0;
     }
 
@@ -124,7 +128,7 @@
 
     /* Offcanvas */
     .offcanvas {
-      background-color: #1f1f1f;
+      background-image: linear-gradient(to bottom,  white,black);
       color: #fff;
     }
 
@@ -210,6 +214,12 @@
         <ul class="dropdown-menu dropdown-menu-end">
           <li><a class="dropdown-item" href="/password_change/"><i class="fa-solid fa-key me-2"></i>Change Password</a></li>
           <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+          <li>
+            <button class="dropdown-item" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers" data-bs-scroll="true">
+              Online Users
+            </button>
+          </li>
         </ul>
       </div>
 
@@ -246,11 +256,11 @@
   <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title"><i class="fa-solid fa-users me-2"></i>Online Users</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+      <button type="button" class="btn-close btn-close-black" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body">
       <hr>
-      <p class="text-muted small text-center btn-primary">Online users will appear here</p>
+      <p class="text-muted small text-center ">Online users will appear here</p>
     </div>
   </div>
 
