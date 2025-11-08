@@ -11,6 +11,7 @@ class HuffmanNode:
     def __lt__(self, other):
         return self.freq < other.freq
 
+
 def build_tree(text):
     frequency = defaultdict(int)
     for char in text:
@@ -27,6 +28,7 @@ def build_tree(text):
 
     return heap[0]
 
+
 def generate_codes(node, current="", codes=None):
     if codes is None:
         codes = {}
@@ -41,13 +43,17 @@ def generate_codes(node, current="", codes=None):
 
     return codes
 
-def encode(text):
+
+# ✅ renamed
+def encode_text(text):
     root = build_tree(text)
     codes = generate_codes(root)
     encoded_text = ''.join(codes[ch] for ch in text)
     return encoded_text, root
 
-def decode(encoded_text, root):
+
+# ✅ renamed
+def decode_text(encoded_text, root):
     decoded = ""
     node = root
 
