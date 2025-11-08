@@ -4,7 +4,7 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from cb.models import Room
-from cb.huffman_codec import encode_text, decode_text     # ✅ NEW IMPORT
+from cb.huffman_codec import encode_text, decode_text     # ✅ IMPORT
 
 ROOM_USERS = {}
 ROOM_TIMERS = {}
@@ -108,32 +108,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not message:
             return
 
-        # ✅ Huffman Encoding
-        encoded_msg, tree = encode_text(message)
+        # ✅ Huffman Encoding (returns encoded string + code dict)
+        encoded_msg, codes = encode_text(message)
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "chat_message",
-                "message": encoded_msg,
+                "message": encoded_msg,   # send encoded msg (binary string)
+                "codes": codes,           # send dictionary (JSON serializable)
                 "user": self.user_name,
                 "color": self.user_color,
-                "tree": tree,   # pass tree for decoding
             },
         )
 
     async def chat_message(self, event):
         encoded = event["message"]
-        tree = event["tree"]
+        codes = event["codes"]         # ✅ receive dictionary
+        user = event["user"]
+        color = event["color"]
 
-        # ✅ Huffman Decoding
-        decoded = decode_text(encoded, tree)
+        # ✅ Decode text using codes
+        decoded = decode_text(encoded, codes)
 
         await self.send(text_data=json.dumps({
             "type": "chat",
             "message": decoded,
-            "user": event["user"],
-            "color": event["color"],
+            "user": user,
+            "color": color,
         }))
 
     async def user_join(self, event):
