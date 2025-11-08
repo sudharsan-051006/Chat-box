@@ -219,7 +219,7 @@
       <form method="POST" action="{% url 'create_room' %}">
         {% csrf_token %}
         <div class="mb-3">
-          <input type="text" name="room_name" class="form-control" placeholder="Enter new room name" required>
+          <input type="text" name="room_name" class="form-control" placeholder="Enter new room name" style="color:white" required>
         </div>
         <button type="submit" class="btn btn-primary w-100">
           <i class="fa-solid fa-plus me-2"></i>Create Room
@@ -237,7 +237,7 @@
           </a>
         {% endfor %}
       {% else %}
-        <p class="primary text-muted text-center mt-2"><i class="fa-solid fa-circle-info me-2"></i>No rooms created yet.</p>
+        <p class="text-muted text-center mt-2" style="color:white"><i class="fa-solid fa-circle-info me-2"></i>No rooms created yet.</p>
       {% endif %}
     </div>
   </main>
