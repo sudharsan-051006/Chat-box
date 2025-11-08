@@ -202,7 +202,7 @@
     <div class="card">
 
       <!-- Settings Dropdown -->
-      <div class="dropdown position-absolute" style="top: 15px; right: 15px;">
+      <div class="dropdown position-absolute" style="top: 15px; right: 15px;color:white">
         <button class="btn btn-sm dropdown-toggle text-info" type="button" id="settingsDropdown"
                 data-bs-toggle="dropdown" aria-expanded="false">
           <i class="fa-solid fa-gear"></i> Settings
@@ -210,9 +210,6 @@
         <ul class="dropdown-menu dropdown-menu-end">
           <li><a class="dropdown-item" href="/password_change/"><i class="fa-solid fa-key me-2"></i>Change Password</a></li>
           <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
-          <li>
-        <button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers" data-bs-scroll="true">Online Users </button>
-      </li>
         </ul>
       </div>
 
