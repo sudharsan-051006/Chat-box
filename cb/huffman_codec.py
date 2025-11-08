@@ -1,5 +1,8 @@
+# cb/huffman_codec.py
+
 import heapq
 from collections import defaultdict
+
 
 class HuffmanNode:
     def __init__(self, char=None, freq=None, left=None, right=None):
@@ -44,23 +47,26 @@ def generate_codes(node, current="", codes=None):
     return codes
 
 
-# ✅ renamed
+# ✅ Return encoded text + dictionary (NOT tree)
 def encode_text(text):
     root = build_tree(text)
     codes = generate_codes(root)
     encoded_text = ''.join(codes[ch] for ch in text)
-    return encoded_text, root
+
+    return encoded_text, codes   # <= SEND THIS OVER WS (JSON SERIALIZABLE)
 
 
-# ✅ renamed
-def decode_text(encoded_text, root):
+# ✅ Decode using reverse lookup
+def decode_text(encoded_text, codes):
+    reverse_codes = {v: k for k, v in codes.items()}
+
     decoded = ""
-    node = root
+    buffer = ""
 
     for bit in encoded_text:
-        node = node.left if bit == "0" else node.right
-        if node.char:
-            decoded += node.char
-            node = root
+        buffer += bit
+        if buffer in reverse_codes:
+            decoded += reverse_codes[buffer]
+            buffer = ""
 
     return decoded
