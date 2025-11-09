@@ -7,9 +7,10 @@ from channels.db import database_sync_to_async
 from cb.models import Room
 from cb.huffman_codec import encode_text, decode_text
 
-ROOM_USERS = {}     # Tracks online users in each room
-ROOM_TIMERS = {}    # Stores auto-delete timers for empty rooms
-LAST_SEEN = {}      # Tracks recent reconnects to prevent false disconnects
+# Track online users in memory
+ROOM_USERS = {}
+ROOM_TIMERS = {}
+LAST_SEEN = {}
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -27,34 +28,51 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def add_allowed_user(self, room, user):
-        """Add user to allowed list and force DB commit."""
+        """Add user to allowed list and save immediately."""
         room.allowed_users.add(user)
-        room.save()  # ensure commit
+        room.save()
 
     @database_sync_to_async
     def user_is_allowed(self, room_name, user):
-        """Direct DB query – always accurate."""
+        """Check directly from DB if user is allowed."""
         return Room.objects.filter(
             name=room_name, allowed_users__id=user.id
         ).exists()
 
     @database_sync_to_async
-    def get_allowed_usernames(self, room_name):
-        """Used only for debugging output."""
-        from cb.models import Room
+    def lock_room_with_users(self, room_name, usernames):
+        """When room locked, add all current online users to allowed list."""
+        from django.contrib.auth.models import User
         try:
-            r = Room.objects.get(name=room_name)
-            return list(r.allowed_users.values_list("username", flat=True))
+            room = Room.objects.get(name=room_name)
+            for username in usernames:
+                try:
+                    user = User.objects.get(username=username)
+                    room.allowed_users.add(user)
+                except User.DoesNotExist:
+                    pass
+            room.is_locked = True
+            room.save()
+        except Room.DoesNotExist:
+            pass
+
+    @database_sync_to_async
+    def get_allowed_usernames(self, room_name):
+        """For debugging or display."""
+        try:
+            room = Room.objects.get(name=room_name)
+            return list(room.allowed_users.values_list("username", flat=True))
         except Room.DoesNotExist:
             return []
 
     # ---------------------- Connection Logic ----------------------
 
     async def connect(self):
+        """Handle WebSocket connection."""
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
-
         user = self.scope["user"]
+
         if not user.is_authenticated:
             await self.close(code=403)
             return
@@ -64,68 +82,63 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=404)
             return
 
-        # always refresh latest DB values
+        # Refresh latest DB state
         await database_sync_to_async(room.refresh_from_db)()
 
-        # true database check
+        # Check if allowed
         is_allowed = await self.user_is_allowed(self.room_name, user)
-        allowed_usernames = await self.get_allowed_usernames(self.room_name)
-        print(
-            f"[DEBUG] room={self.room_name} | locked={room.is_locked} | "
-            f"user={user.username} | allowed_in_db={is_allowed} | "
-            f"db_allowed={allowed_usernames}"
-        )
+        print(f"[DEBUG] {user.username} allowed: {is_allowed}, locked: {room.is_locked}")
 
-        # if room locked -> only already-allowed users can join
         if room.is_locked and not is_allowed:
-            print(f"[DEBUG] {user.username} rejected (room locked)")
+            print(f"[DEBUG] ❌ {user.username} blocked (room locked)")
             await self.close(code=403)
             return
 
-        # if room unlocked -> auto-add user to allowed list
+        # Auto-add user if room unlocked
         if not room.is_locked and not is_allowed:
             await self.add_allowed_user(room, user)
-            print(f"[DEBUG] {user.username} auto-added to allowed list")
 
-        # Assign UI color
+        # Assign user name + color
         self.user_name = user.username
         self.user_color = random.choice(
             ["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"]
         )
 
-        # Track last seen time (for detecting refresh reconnects)
+        # Record connection time
         LAST_SEEN[(self.room_group_name, self.user_name)] = time.time()
 
-        # Track active users
+        # Track online users
         ROOM_USERS.setdefault(self.room_group_name, [])
         if self.user_name not in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].append(self.user_name)
 
-        # cancel pending deletion
+        # Cancel any pending deletion timer
         if self.room_group_name in ROOM_TIMERS:
             ROOM_TIMERS[self.room_group_name].cancel()
             del ROOM_TIMERS[self.room_group_name]
 
+        # Join group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        # Notify join
+        # Notify others
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "user_join", "user": self.user_name},
         )
 
     async def disconnect(self, close_code):
+        """Handle user disconnect."""
         if not self.user_name:
             return
 
-        # If this disconnect happens within 3 seconds of a reconnect, ignore it
+        # Ignore disconnect if same user reconnected quickly
         last_seen = LAST_SEEN.get((self.room_group_name, self.user_name), 0)
         if time.time() - last_seen < 3:
-            print(f"[DEBUG] Ignored disconnect for {self.user_name} (likely refresh)")
+            print(f"[DEBUG] Ignored disconnect for {self.user_name} (refresh)")
             return
 
-        print(f"[DEBUG] {self.user_name} disconnecting normally...")
+        print(f"[DEBUG] {self.user_name} disconnected")
 
         if self.room_group_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].remove(self.user_name)
@@ -137,26 +150,45 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
+        # If room empty, start timer for deletion
         if not ROOM_USERS.get(self.room_group_name):
             ROOM_TIMERS[self.room_group_name] = asyncio.create_task(
                 self.delete_room_after_timeout()
             )
 
     async def delete_room_after_timeout(self):
+        """Delete room if empty for 30 seconds."""
         await asyncio.sleep(30)
         if not ROOM_USERS.get(self.room_group_name):
             await database_sync_to_async(
                 Room.objects.filter(name=self.room_name).delete
             )()
-            print(f"🗑 Room {self.room_name} deleted (empty 30 s)")
+            print(f"🗑 Deleted room {self.room_name} (empty for 30s)")
             ROOM_USERS.pop(self.room_group_name, None)
             ROOM_TIMERS.pop(self.room_group_name, None)
 
-    # ---------------------- Message Handling ----------------------
+    # ---------------------- Custom Lock Command ----------------------
 
     async def receive(self, text_data):
+        """Receive messages or commands from client."""
         data = json.loads(text_data)
         message = data.get("message", "").strip()
+        command = data.get("command", None)
+
+        # 🔒 Handle lock command
+        if command == "lock_room":
+            online_users = ROOM_USERS.get(self.room_group_name, [])
+            await self.lock_room_with_users(self.room_name, online_users)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "system_message",
+                    "message": f"🔒 Room locked! Allowed users: {', '.join(online_users)}",
+                },
+            )
+            return
+
+        # Normal chat message
         if not message:
             return
 
@@ -174,42 +206,37 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         decoded = decode_text(event["message"], event["codes"])
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "type": "chat",
-                    "message": decoded,
-                    "user": event["user"],
-                    "color": event["color"],
-                }
-            )
-        )
+        await self.send(text_data=json.dumps({
+            "type": "chat",
+            "message": decoded,
+            "user": event["user"],
+            "color": event["color"],
+        }))
 
     # ---------------------- System Events ----------------------
 
+    async def system_message(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "system",
+            "user": "System",
+            "message": event["message"],
+        }))
+
     async def user_join(self, event):
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "type": "system",
-                    "user": "System",
-                    "message": f"{event['user']} joined 👋",
-                }
-            )
-        )
+        await self.send(text_data=json.dumps({
+            "type": "system",
+            "user": "System",
+            "message": f"{event['user']} joined 👋",
+        }))
         await asyncio.sleep(0.1)
         await self.update_all_user_lists()
 
     async def user_leave(self, event):
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "type": "system",
-                    "user": "System",
-                    "message": f"{event['user']} left 👋",
-                }
-            )
-        )
+        await self.send(text_data=json.dumps({
+            "type": "system",
+            "user": "System",
+            "message": f"{event['user']} left 👋",
+        }))
         await asyncio.sleep(0.1)
         await self.update_all_user_lists()
 
