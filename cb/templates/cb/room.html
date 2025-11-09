@@ -280,6 +280,9 @@
       alert("Server error while toggling lock");
     }
   });
+document.getElementById("lock-toggle-btn").onclick = function() {
+    chatSocket.send(JSON.stringify({ command: "lock_room" }));
+};
 
   // Send message
   chatForm.addEventListener("submit", function(e) {
