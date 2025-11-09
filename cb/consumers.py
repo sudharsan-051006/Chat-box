@@ -154,33 +154,44 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     # ---------------------- System Events ----------------------
-
     async def user_join(self, event):
+        # Notify all users about new join
         await self.send(text_data=json.dumps({
             "type": "system",
             "user": event["user"],
             "message": f"{event['user']} joined 👋",
         }))
-        await self.send_user_list()
+
+        # Wait a tiny moment before sending user list so new connection is registered
+        await asyncio.sleep(0.1)
+        await self.update_all_user_lists()
 
     async def user_leave(self, event):
+        # Notify all users about leave
         await self.send(text_data=json.dumps({
             "type": "system",
             "user": event["user"],
             "message": f"{event['user']} left 👋",
         }))
-        await self.send_user_list()
 
-    async def send_user_list(self):
+        await asyncio.sleep(0.1)
+        await self.update_all_user_lists()
+
+    # ---------------------- Online User List Handling ----------------------
+
+    async def update_all_user_lists(self):
+        """Broadcast current list of users to all in the group."""
+        users = ROOM_USERS.get(self.room_group_name, [])
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "broadcast_user_list",
-                "users": ROOM_USERS.get(self.room_group_name, []),
+                "users": users,
             }
         )
 
     async def broadcast_user_list(self, event):
+        """Send user list to one client."""
         await self.send(text_data=json.dumps({
             "type": "user_list",
             "users": event["users"],
