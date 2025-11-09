@@ -158,7 +158,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Notify all users about new join
         await self.send(text_data=json.dumps({
             "type": "system",
-            "user": event["user"],
+            "user": "System",
             "message": f"{event['user']} joined 👋",
         }))
 
@@ -170,7 +170,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Notify all users about leave
         await self.send(text_data=json.dumps({
             "type": "system",
-            "user": event["user"],
+            "user": "System",
             "message": f"{event['user']} left 👋",
         }))
 
