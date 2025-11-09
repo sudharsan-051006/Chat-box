@@ -95,11 +95,11 @@ def toggle_lock(request, room_name):
 #             """)
 #         return HttpResponse("✅ cb_room_allowed_users table created successfully!")
 #     except Exception as e:
-#         return HttpResponse(f"❌ Error while creating table: {e}")
-def run_migrations(request):
-    try:
-        call_command('makemigrations', 'cb')
-        call_command('migrate')
-        return HttpResponse("✅ Migrations applied successfully.")
-    except Exception as e:
-        return HttpResponse(f"❌ Migration error: {str(e)}")
+# #         return HttpResponse(f"❌ Error while creating table: {e}")
+# def run_migrations(request):
+#     try:
+#         call_command('makemigrations', 'cb')
+#         call_command('migrate')
+#         return HttpResponse("✅ Migrations applied successfully.")
+#     except Exception as e:
+#         return HttpResponse(f"❌ Migration error: {str(e)}")
