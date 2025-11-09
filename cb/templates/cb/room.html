@@ -232,12 +232,25 @@ chatForm.addEventListener("submit", function(e) {
   }
 });
 
-/* ------------------ LIKE / DISLIKE ------------------ */
-let count = 0;
-document.getElementById("likeButton").onclick = () => document.getElementById("likeCount").innerText = ++count;
+/* ------------------ LIKE / DISLIKE ------------------ *//* ------------------ LIKE / DISLIKE (WebSocket Broadcast) ------------------ */
+let likeCount = 0;
+let dislikeCount = 0;
 
-let dcount = 0;
-document.getElementById("dilikeButton").onclick = () => document.getElementById("dislikeCount").innerText = ++dcount;
+document.getElementById("likeButton").onclick = () => {
+  likeCount++;
+  chatSocket.send(JSON.stringify({
+    type: "reaction",
+    reaction: "like"
+  }));
+};
+
+document.getElementById("dilikeButton").onclick = () => {
+  dislikeCount++;
+  chatSocket.send(JSON.stringify({
+    type: "reaction",
+    reaction: "dislike"
+  }));
+};
 
 /* ------------------ LEAVE ROOM ------------------ */
 document.getElementById("leave-room-btn").onclick = () => {
