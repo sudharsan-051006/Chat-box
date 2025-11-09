@@ -4,123 +4,119 @@
 <head>
   <meta charset="UTF-8">
   <title>Chat Room</title>
+
+  <!-- Bootstrap + FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
 
-  <style>
-    body { background: rgb(69, 68, 68); }
+<style>
 
-    /* Chat messages area */
-    #chat-messages {
-      height: 65vh;
-      overflow-y: auto;
-      padding: 2rem 1rem 1rem 1rem;
-      border-radius: .5rem;
-      background: black;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
+/* ✅ THEME: DEFAULT = DARK MODE */
+body.dark-mode {
+  background: rgb(69, 68, 68);
+}
+body.dark-mode #chat-messages {
+  background: black;
+  color: white;
+}
+body.dark-mode .system {
+  color: #aaa;
+}
 
-    .message-time {
-      display: block;
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.7);
-      text-align: right;
-      margin-top: 2px;
-    }
+/* ✅ LIGHT MODE THEME */
+body.light-mode {
+  background: #f8f9fa;
+}
+body.light-mode #chat-messages {
+  background: white;
+  color: black;
+}
+body.light-mode .system {
+  color: #666;
+}
 
-    .other .message-time { color: rgba(0,0,0,0.6); }
+/* Chat messages container */
+#chat-messages {
+  height: 65vh;
+  overflow-y: auto;
+  padding: 2rem 1rem 1rem 1rem;
+  border-radius: .5rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
 
-    .message {
-      display: inline-block;
-      padding: 0.4rem 0.8rem;
-      border-radius: 1rem;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-      max-width: 70%;
-      font-size: 1rem;
-      line-height: 1.4;
-    }
+/* message time */
+.message-time {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.7);
+  text-align: right;
+  margin-top: 2px;
+}
+.other .message-time { color: rgba(0,0,0,0.6); }
 
-    /* ✅ Right-aligned messages (You) */
-    .me {
-      background: #007bff;
-      color: #fff;
-      align-self: flex-end;
-      border-radius: 1rem 1rem 0 1rem;
-      padding: 0.4rem 0.8rem;
-      text-align: right;
-    }
+/* Generic message bubble */
+.message {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-width: 70%;
+  font-size: 1rem;
+  line-height: 1.4;
+}
 
-    /* ✅ Left-aligned messages (Others) */
-    .other {
-      background: #e9ecef;
-      color: #212529;
-      align-self: flex-start;
-      border-radius: 1rem 1rem 1rem 0;
-      padding: 0.4rem 0.8rem;
-    }
+/* ✅ Right-aligned messages (You) */
+.me {
+  background: #007bff;
+  color: #fff;
+  align-self: flex-end;
+  border-radius: 1rem 1rem 0 1rem;
+  padding: 0.4rem 0.8rem;
+  text-align: right;
+}
 
-    /* ✅ Centered system messages */
-    .system {
-      align-self: center;
-      color: #aaa;
-      font-style: italic;
-      background: none;
-      border: none;
-      padding: 0.4rem 1rem;
-      width: auto;
-      font-size: 0.9rem;
-      display: block;
-      text-align: center;
-      margin: 0.5rem auto;
-      opacity: 0.85;
-      animation: fadeIn 0.4s ease-in-out;
-      border-radius: 8px;
-      background-color: rgba(255,255,255,0.05);
-    }
+/* ✅ Left-aligned messages (Others) */
+.other {
+  background: #e9ecef;
+  color: #212529;
+  align-self: flex-start;
+  border-radius: 1rem 1rem 1rem 0;
+  padding: 0.4rem 0.8rem;
+}
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
+/* ✅ System message */
+.system {
+  align-self: center;
+  font-style: italic;
+  background: rgba(255,255,255,0.05);
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+}
 
-    .system::before, .system::after {
-      content: "";
-      display: inline-block;
-      width: 35%;
-      height: 1px;
-      background: rgba(255,255,255,0.2);
-      vertical-align: middle;
-      margin: 0 8px;
-    }
-
-    #chat-message-input {
-      color: white;
-      background-color: black;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-  </style>
+</style>
 </head>
-<body>
+
+<body class="dark-mode">
 <div class="container my-4 position-relative">
 
   <!-- Settings Dropdown -->
   <div class="dropdown position-absolute" style="top:10px; right:10px; z-index:15;">
-    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="settingsDropdown"
-            data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fa-solid fa-grid-2" style="font-family: 'Courier New', Courier, monospace;"> Dashboard</i>
+    <button class="btn btn-sm dropdown-toggle" type="button"
+            id="settingsDropdown" data-bs-toggle="dropdown" style="color: turquoise;background-color: #666;"  aria-expanded="false">
+      <i class="fa-solid fa-table-columns"></i> Dashboard
     </button>
 
-
     <ul class="dropdown-menu dropdown-menu-end">
+
       <li><a class="dropdown-item" href="/password_change/">Change Password</a></li>
 
+      <!-- 🔐 Lock / Unlock -->
       <li>
-        {% if request.user.username == room.created_by.username %}
+      {% if request.user.username == room.created_by.username %}
         <button id="lock-toggle-btn" class="dropdown-item text-warning" data-room="{{ room.name }}">
           {% if room.is_locked %}
             🔓 Unlock Room
@@ -128,14 +124,17 @@
             🔒 Lock Room
           {% endif %}
         </button>
-        {% endif %}
+      {% endif %}
       </li>
+
+      <!-- 🌙 / 🌞 THEME SWITCH -->
+      <li><button class="dropdown-item" id="toggle-theme-btn">🌙 Night Mode</button></li>
 
       <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
 
       <li>
         <button class="dropdown-item" type="button"
-                data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers" data-bs-scroll="true">
+                data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers">
           Online Users
         </button>
       </li>
@@ -144,163 +143,148 @@
     </ul>
   </div>
 
-  <br><br><br><br>
+<br><br><br><br>
 
-  <h3 style="color: #e9ecef;display: inline-block;" class="btn btn-primary">
-      {{ room_name }}
-      {% if room.is_locked %} ⛓️ {% endif %}
-  </h3>
-  <button id="likeButton" style="color: whitesmoke;" class="btn btn-primary"><i class="fa-solid fa-thumbs-up"></i><span id="likeCount"> 0</span></button>
-  <button id="dilikeButton" style="color: whitesmoke;" class="btn btn-danger"><i class="fa-solid fa-thumbs-down"></i><span id="dislikeCount"> 0</span></button>
-  <!-- Chat messages area -->
-  <div id="chat-messages" class="position-relative"></div>
+<h3 style="color: #e9ecef; display:inline-block;" class="btn btn-primary">
+  {{ room_name }}
+  {% if room.is_locked %} ⛓️ {% endif %}
+</h3>
 
-  <!-- Input box -->
-  <form id="chat-form" class="mt-3 d-flex">
-    {% csrf_token %}
-    <textarea id="chat-message-input" rows="2" class="form-control me-2"
-              placeholder="Type a message..." autocomplete="off"></textarea>
-    <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
-  </form>
+<button id="likeButton" class="btn btn-primary"><i class="fa-solid fa-thumbs-up"></i><span id="likeCount"> 0</span></button>
+<button id="dilikeButton" class="btn btn-danger"><i class="fa-solid fa-thumbs-down"></i><span id="dislikeCount"> 0</span></button>
+
+<!-- Chat Area -->
+<div id="chat-messages" class="position-relative"></div>
+
+<!-- Input area -->
+<form id="chat-form" class="mt-3 d-flex">
+  {% csrf_token %}
+  <textarea id="chat-message-input" rows="2" class="form-control me-2"
+            placeholder="Type a message..." autocomplete="off"></textarea>
+  <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
+</form>
 </div>
 
-<!-- Offcanvas for online users -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers" data-bs-scroll="true">
+<!-- Offcanvas Sidebar (Online users) -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="online-users-title">Online Users (0)</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
   </div>
   <div class="offcanvas-body">
-    <ul id="online-users" class="list-group" style="background-color: black; color: green;"></ul>
+    <ul id="online-users" class="list-group"></ul>
   </div>
 </div>
 
-<!-- WebSocket + Chat JS -->
+<!-- JS -->
 <script>
-  const roomName = "{{ room_name }}";
-  const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const chatSocket = new WebSocket(ws_scheme + '://' + window.location.host + '/ws/chat/' + roomName + '/');
+/* ------------------ WEBSOCKET CHAT ------------------ */
 
-  const chatMessages = document.getElementById("chat-messages");
-  const chatForm = document.getElementById("chat-form");
-  const inputField = document.getElementById("chat-message-input");
-  const onlineUsers = document.getElementById("online-users");
-  const onlineUsersTitle = document.getElementById("online-users-title");
-  const currentUser = "{{ request.user.username }}";
+const roomName = "{{ room_name }}";
+const ws_scheme = location.protocol === "https:" ? "wss" : "ws";
+const chatSocket = new WebSocket(ws_scheme + '://' + location.host + '/ws/chat/' + roomName + '/');
 
-  inputField.addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      chatForm.dispatchEvent(new Event("submit"));
-    }
+const chatMessages = document.getElementById("chat-messages");
+const chatForm     = document.getElementById("chat-form");
+const inputField   = document.getElementById("chat-message-input");
+const currentUser  = "{{ request.user.username }}";
+
+chatSocket.onmessage = function(e) {
+  const data = JSON.parse(e.data);
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ":" +
+                  now.getMinutes().toString().padStart(2,'0');
+
+  if (data.type === "user_list") {
+    const onlineUsers = document.getElementById("online-users");
+    const onlineUsersTitle = document.getElementById("online-users-title");
+    onlineUsers.innerHTML = "";
+    data.users.forEach(u => {
+      const li = document.createElement("li");
+      li.className = "list-group-item";
+      li.textContent = u;
+      onlineUsers.appendChild(li);
+    });
+    onlineUsersTitle.textContent = `Online Users (${data.users.length})`;
+    return;
+  }
+
+  const msg = document.createElement("div");
+
+  if (data.user === "System") {
+    msg.className = "system";
+    msg.textContent = data.message + " (" + timeStr + ")";
+  } else {
+    msg.className = (data.user.trim() === currentUser.trim()) ? "message me" : "message other";
+    msg.innerHTML = `<span>${data.user === currentUser ? data.message : data.user + ": " + data.message}</span>
+                     <span class="message-time">${timeStr}</span>`;
+  }
+
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+};
+
+chatForm.addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (inputField.value.trim()) {
+    chatSocket.send(JSON.stringify({ "message": inputField.value }));
+    inputField.value = "";
+  }
+});
+
+/* ------------------ LIKE / DISLIKE ------------------ */
+let count = 0;
+document.getElementById("likeButton").onclick = () => document.getElementById("likeCount").innerText = ++count;
+
+let dcount = 0;
+document.getElementById("dilikeButton").onclick = () => document.getElementById("dislikeCount").innerText = ++dcount;
+
+/* ------------------ LEAVE ROOM ------------------ */
+document.getElementById("leave-room-btn").onclick = () => {
+  if (chatSocket.readyState === WebSocket.OPEN) chatSocket.close();
+  location.href = "/";
+};
+
+/* ------------------ LOCK / UNLOCK ------------------ */
+document.getElementById("lock-toggle-btn")?.addEventListener("click", async function() {
+  const roomName = this.dataset.room;
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+  const res = await fetch(`/room/${roomName}/toggle-lock/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken }
   });
 
-  chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-    const now = new Date();
-    const timeStr = now.getHours().toString().padStart(2,'0') + ':' +
-                    now.getMinutes().toString().padStart(2,'0');
+  const data = await res.json();
+  const btn = document.getElementById("lock-toggle-btn");
+  const roomTitle = document.querySelector("h3");
 
-    if (data.type === "user_list") {
-      onlineUsers.innerHTML = "";
-      data.users.forEach(u => {
-        const li = document.createElement("li");
-        li.className = "list-group-item";
-        li.textContent = u;
-        onlineUsers.appendChild(li);
-      });
-      onlineUsersTitle.textContent = `Online Users (${data.users.length})`;
-    } else {
-      const msg = document.createElement("div");
+  if (data.locked) {
+    btn.textContent = "🔓 Unlock Room";
+    if (!roomTitle.innerHTML.includes("⛓️")) roomTitle.innerHTML += " ⛓️";
+  } else {
+    btn.textContent = "🔒 Lock Room";
+    roomTitle.innerHTML = roomTitle.innerHTML.replace("⛓️", "").trim();
+  }
+});
 
-      if (data.user === "System") {
-        msg.className = "system";
-        msg.textContent = data.message + " (" + timeStr + ")";
-      } else {
-        // ✅ Determine side based on sender
-        const isMe = data.user.trim().toLowerCase() === currentUser.trim().toLowerCase();
-        msg.className = isMe ? "message me" : "message other";
+/* ------------------ THEME MODE ------------------ */
+const themeBtn = document.getElementById("toggle-theme-btn");
 
-        const textSpan = document.createElement("span");
-        textSpan.textContent = isMe
-          ? data.message
-          : data.user + ": " + data.message;
+// Load saved theme
+document.body.className = localStorage.getItem("theme") || "dark-mode";
+themeBtn.textContent = document.body.classList.contains("dark-mode") ? "🌞 Light Mode" : "🌙 Night Mode";
 
-        const timeSpan = document.createElement("span");
-        timeSpan.className = "message-time";
-        timeSpan.textContent = timeStr;
+themeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  document.body.classList.toggle("light-mode");
 
-        msg.appendChild(textSpan);
-        msg.appendChild(timeSpan);
-      }
+  const isDark = document.body.classList.contains("dark-mode");
+  themeBtn.textContent = isDark ? "🌞 Light Mode" : "🌙 Night Mode";
 
-      chatMessages.appendChild(msg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-  };
-  let count = 0;
+  localStorage.setItem("theme", isDark ? "dark-mode" : "light-mode");
+});
 
-  document.getElementById("likeButton").addEventListener("click", function () {
-      count++;
-      document.getElementById("likeCount").innerText = count;
-  });
-
-  let dcount = 0;
-  
-  document.getElementById("dilikeButton").addEventListener("click", function(){
-    dcount++;
-    document.getElementById("dislikeCount").innerText = dcount;
-  });
-
-  // Leave room button
-  document.getElementById("leave-room-btn").addEventListener("click", function() {
-    if (chatSocket.readyState === WebSocket.OPEN) chatSocket.close();
-    window.location.href = "/";
-  });
-
-  // Toggle lock button
-  document.getElementById("lock-toggle-btn")?.addEventListener("click", async function() {
-    const roomName = this.dataset.room;
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
-    try {
-      const res = await fetch(`/room/${roomName}/toggle-lock/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken
-        }
-      });
-
-      const data = await res.json();
-      const btn = document.getElementById("lock-toggle-btn");
-      const roomTitle = document.querySelector("h3");
-
-      if (data.status === "success") {
-        if (data.locked) {
-          btn.textContent = "🔓 Unlock Room";
-          alert("🔒 Room is now locked!");
-          if (!roomTitle.innerHTML.includes("⛓️")) roomTitle.innerHTML += " ⛓️";
-        } else {
-          btn.textContent = "🔒 Lock Room";
-          alert("✅ Room is now unlocked!");
-          roomTitle.innerHTML = roomTitle.innerHTML.replace("⛓️", "").trim();
-        }
-      } else alert("⚠️ Error toggling lock");
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Server error while toggling lock");
-    }
-  });
-
-  // Send message
-  chatForm.addEventListener("submit", function(e) {
-    e.preventDefault();
-    if (inputField.value.trim()) {
-      chatSocket.send(JSON.stringify({ "message": inputField.value }));
-      inputField.value = "";
-    }
-  });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
