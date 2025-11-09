@@ -1,13 +1,15 @@
 import json
 import random
 import asyncio
+import time
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from cb.models import Room
 from cb.huffman_codec import encode_text, decode_text
 
-ROOM_USERS = {}
-ROOM_TIMERS = {}
+ROOM_USERS = {}     # Tracks online users in each room
+ROOM_TIMERS = {}    # Stores auto-delete timers for empty rooms
+LAST_SEEN = {}      # Tracks recent reconnects to prevent false disconnects
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -91,6 +93,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"]
         )
 
+        # Track last seen time (for detecting refresh reconnects)
+        LAST_SEEN[(self.room_group_name, self.user_name)] = time.time()
+
         # Track active users
         ROOM_USERS.setdefault(self.room_group_name, [])
         if self.user_name not in ROOM_USERS[self.room_group_name]:
@@ -114,7 +119,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not self.user_name:
             return
 
-        await asyncio.sleep(1)  # avoid flicker
+        # If this disconnect happens within 3 seconds of a reconnect, ignore it
+        last_seen = LAST_SEEN.get((self.room_group_name, self.user_name), 0)
+        if time.time() - last_seen < 3:
+            print(f"[DEBUG] Ignored disconnect for {self.user_name} (likely refresh)")
+            return
+
+        print(f"[DEBUG] {self.user_name} disconnecting normally...")
 
         if self.room_group_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_group_name]:
             ROOM_USERS[self.room_group_name].remove(self.user_name)
