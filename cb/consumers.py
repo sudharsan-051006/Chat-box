@@ -222,54 +222,82 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ROOM_TIMERS.pop(self.room_group_name, None)
 
     # ---------------------- Message Handling ----------------------
-    async def receive(self, text_data):
-        """Handle incoming WebSocket messages (commands + chat)."""
-        data = json.loads(text_data)
-        message = data.get("message", "").strip()
-        command = data.get("command")
+	async def receive(self, text_data):
+		"""Handles incoming WebSocket messages."""
+		data = json.loads(text_data)
+		message = data.get("message", "").strip()
+		command = data.get("command")
+		reaction = data.get("reaction")
 
-        # ---------------------- LOCK ROOM COMMAND ----------------------
-        if command == "lock_room":
-            # Get current online users in this room
-            online = ROOM_USERS.get(self.room_group_name, []).copy()
+		# ✅ Handle like/dislike broadcast
+		if reaction in ["like", "dislike"]:
+			# Initialize reaction counters if not present
+			if not hasattr(self.channel_layer, "room_reactions"):
+				self.channel_layer.room_reactions = {}
 
-            # Normalize usernames (lowercase, strip spaces)
-            online_norm = [u.strip().lower() for u in online if u]
+			room_reactions = getattr(self.channel_layer, "room_reactions")
+			room_reactions.setdefault(self.room_group_name, {"likes": 0, "dislikes": 0})
 
-            # Lock room in DB and save allowed_usernames
-            success = await self.lock_room_with_usernames(self.room_name, online_norm)
-            if success:
-                # Ensure M2M sync (if your Room still uses allowed_users field)
-                await self.sync_allowed_user_m2m(self.room_name)
+			if reaction == "like":
+				room_reactions[self.room_group_name]["likes"] += 1
+			elif reaction == "dislike":
+				room_reactions[self.room_group_name]["dislikes"] += 1
 
-                # Notify all connected users
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        "type": "system_message",
-                        "message": f"🔒 Room locked! Allowed: {', '.join(online_norm)}"
-                    }
-                )
-            return
+			counts = room_reactions[self.room_group_name]
 
-        # ---------------------- NORMAL MESSAGE ----------------------
-        if not message:
-            return  # Ignore empty messages
+			# Broadcast to all users in the room
+			await self.channel_layer.group_send(
+				self.room_group_name,
+				{
+					"type": "reaction_update",
+					"likes": counts["likes"],
+					"dislikes": counts["dislikes"],
+				},
+			)
+			return
 
-        # Compress message using Huffman encoding
-        encoded_msg, codes = encode_text(message)
+		# ✅ Handle lock-room command (existing logic)
+		if command == "lock_room":
+			online_users = ROOM_USERS.get(self.room_group_name, [])
+			success = await self.lock_room_with_usernames(self.room_name, online_users)
+			if success:
+				await self.channel_layer.group_send(
+					self.room_group_name,
+					{
+						"type": "system_message",
+						"message": f"🔒 Room locked! Allowed: {', '.join(online_users)}",
+					},
+				)
+			return
 
-        # Broadcast encoded message + metadata
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "chat_message",
-                "message": encoded_msg,   # compressed string
-                "codes": codes,           # dictionary for decoding
-                "user": self.user_name,
-                "color": self.user_color,
-            },
-        )
+		# ✅ Handle normal chat messages
+		if not message:
+			return
+
+		encoded_msg, codes = encode_text(message)
+		await self.channel_layer.group_send(
+			self.room_group_name,
+			{
+				"type": "chat_message",
+				"message": encoded_msg,
+				"codes": codes,
+				"user": self.user_name,
+				"color": self.user_color,
+			},
+		)
+
+	async def reaction_update(self, event):
+		"""Broadcasts reaction count updates to all users."""
+		await self.send(
+			text_data=json.dumps(
+				{
+					"type": "reaction",
+					"likes": event["likes"],
+					"dislikes": event["dislikes"],
+				}
+			)
+		)
+
 
     async def chat_message(self, event):
         decoded = decode_text(event["message"], event["codes"])
