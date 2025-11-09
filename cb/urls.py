@@ -16,5 +16,5 @@ urlpatterns = [
     path('chat/<str:room_name>/', views.room, name='room'), 
     path("room/<str:room_name>/toggle-lock/", views.toggle_lock, name="toggle_lock"),
     # path('create-admin/', views.create_admin, name='create_admin'),
-    # path("run_migrations/", views.run_migrations, name="run_migrations"),
+    path("run_migrations/", views.fix_allowed_usernames_column, name="run_migrations"),
 ]
