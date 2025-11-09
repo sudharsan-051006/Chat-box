@@ -280,9 +280,6 @@
       alert("Server error while toggling lock");
     }
   });
-document.getElementById("lock-toggle-btn").onclick = function() {
-    chatSocket.send(JSON.stringify({ command: "lock_room" }));
-};
 
   // Send message
   chatForm.addEventListener("submit", function(e) {
@@ -292,7 +289,6 @@ document.getElementById("lock-toggle-btn").onclick = function() {
       inputField.value = "";
     }
   });
-  chatSocket.send(JSON.stringify({ command: "lock_room" }));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
