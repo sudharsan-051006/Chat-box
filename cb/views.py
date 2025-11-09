@@ -96,8 +96,8 @@ def toggle_lock(request, room_name):
 #         return HttpResponse("✅ cb_room_allowed_users table created successfully!")
 #     except Exception as e:
 # #         return HttpResponse(f"❌ Error while creating table: {e}")
-def fix_allowed_usernames_column(request):
-    from django.db import connection
-    with connection.cursor() as cursor:
-        cursor.execute("ALTER TABLE cb_room ADD COLUMN IF NOT EXISTS allowed_usernames JSONB DEFAULT '[]';")
-    return HttpResponse("✅ allowed_usernames column fixed!")
+# def fix_allowed_usernames_column(request):
+#     from django.db import connection
+#     with connection.cursor() as cursor:
+#         cursor.execute("ALTER TABLE cb_room ADD COLUMN IF NOT EXISTS allowed_usernames JSONB DEFAULT '[]';")
+#     return HttpResponse("✅ allowed_usernames column fixed!")
