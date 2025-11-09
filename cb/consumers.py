@@ -47,7 +47,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=404)
             return
 
+        room = await self.get_room(self.room_name)  # 🔄 refetch latest data
         is_allowed = await self.user_is_allowed(room, user)
+
 
         # ✅ Allow reconnects if user was already allowed before lock
         if room.is_locked and not is_allowed:
