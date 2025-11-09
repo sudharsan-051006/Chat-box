@@ -47,16 +47,20 @@ def create_room(request):
     return redirect('index')
 
 
-# 💬 JOIN SPECIFIC ROOM
 @login_required
 def room(request, room_name):
     room = Room.objects.get(name=room_name)
+    username = request.user.username.strip().lower()
 
-    # ✅ Prevent new users if room is locked
-    if room.is_locked and request.user != room.created_by:
+    # ✅ Use allowed_usernames (JSON) instead of M2M check
+    allowed_list = room.allowed_usernames if isinstance(room.allowed_usernames, list) else []
+
+    # 🚫 Block if locked and user is not in allowed list (except creator)
+    if room.is_locked and username not in allowed_list and request.user != room.created_by:
         return HttpResponseForbidden("🚫 This room is locked by the creator.")
 
     return render(request, 'cb/room.html', {'room_name': room_name, 'room': room})
+
 
 @login_required
 def create_room(request):
