@@ -13,6 +13,7 @@ User = get_user_model()
 ROOM_USERS = {}     # { group_name: [username, ...] }
 ROOM_TIMERS = {}
 LAST_SEEN = {}
+REACTIONS = {} 
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -221,40 +222,54 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ROOM_TIMERS.pop(self.room_group_name, None)
 
     # ---------------------- Message Handling ----------------------
-
     async def receive(self, text_data):
+        """Handle incoming WebSocket messages (commands + chat)."""
         data = json.loads(text_data)
         message = data.get("message", "").strip()
         command = data.get("command")
 
-        # lock command: capture online usernames, lock room (DB) and sync M2M
+        # ---------------------- LOCK ROOM COMMAND ----------------------
         if command == "lock_room":
-            # ROOM_USERS keyed by group_name
+            # Get current online users in this room
             online = ROOM_USERS.get(self.room_group_name, []).copy()
-            # normalize
+
+            # Normalize usernames (lowercase, strip spaces)
             online_norm = [u.strip().lower() for u in online if u]
+
+            # Lock room in DB and save allowed_usernames
             success = await self.lock_room_with_usernames(self.room_name, online_norm)
             if success:
-                # also ensure M2M sync is performed (lock function already syncs)
+                # Ensure M2M sync (if your Room still uses allowed_users field)
                 await self.sync_allowed_user_m2m(self.room_name)
-                await self.channel_layer.group_send(self.room_group_name, {
-                    "type": "system_message",
-                    "message": f"🔒 Room locked! Allowed: {', '.join(online_norm)}"
-                })
+
+                # Notify all connected users
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "system_message",
+                        "message": f"🔒 Room locked! Allowed: {', '.join(online_norm)}"
+                    }
+                )
             return
 
+        # ---------------------- NORMAL MESSAGE ----------------------
         if not message:
-            return
+            return  # Ignore empty messages
 
-        # compress using Huffman then broadcast
+        # Compress message using Huffman encoding
         encoded_msg, codes = encode_text(message)
-        await self.channel_layer.group_send(self.room_group_name, {
-            "type": "chat_message",
-            "message": encoded_msg,
-            "codes": codes,
-            "user": self.user_name,
-            "color": self.user_color,
-        })
+
+        # Broadcast encoded message + metadata
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_message",
+                "message": encoded_msg,   # compressed string
+                "codes": codes,           # dictionary for decoding
+                "user": self.user_name,
+                "color": self.user_color,
+            },
+        )
 
     async def chat_message(self, event):
         decoded = decode_text(event["message"], event["codes"])
