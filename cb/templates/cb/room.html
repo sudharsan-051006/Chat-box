@@ -11,7 +11,7 @@
 
 <style>
 
-/* ✅ THEME: DEFAULT = DARK MODE */
+/* ✅ THEME: DARK MODE (default) */
 body.dark-mode {
   background: rgb(69, 68, 68);
 }
@@ -19,11 +19,9 @@ body.dark-mode #chat-messages {
   background: black;
   color: white;
 }
-body.dark-mode .system {
-  color: #aaa;
-}
+body.dark-mode .system { color: #aaa; }
 
-/* ✅ LIGHT MODE THEME */
+/* ✅ LIGHT MODE */
 body.light-mode {
   background: #f8f9fa;
 }
@@ -31,11 +29,9 @@ body.light-mode #chat-messages {
   background: white;
   color: black;
 }
-body.light-mode .system {
-  color: #666;
-}
+body.light-mode .system { color: #666; }
 
-/* Chat messages container */
+/* ✅ Chat container */
 #chat-messages {
   height: 65vh;
   overflow-y: auto;
@@ -47,47 +43,6 @@ body.light-mode .system {
   gap: 0.6rem;
 }
 
-/* message time */
-.message-time {
-  display: block;
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.7);
-  text-align: right;
-  margin-top: 2px;
-}
-.other .message-time { color: rgba(0,0,0,0.6); }
-
-/* Generic message bubble */
-.message {
-  display: inline-block;
-  padding: 0.4rem 0.8rem;
-  border-radius: 1rem;
-  word-break: break-word;
-  white-space: pre-wrap;
-  max-width: 70%;
-  font-size: 1rem;
-  line-height: 1.4;
-}
-
-/* ✅ Right-aligned messages (You) */
-.me {
-  background: #007bff;
-  color: #fff;
-  align-self: flex-end;
-  border-radius: 1rem 1rem 0 1rem;
-  padding: 0.4rem 0.8rem;
-  text-align: right;
-}
-
-/* ✅ Left-aligned messages (Others) */
-.other {
-  background: #e9ecef;
-  color: #212529;
-  align-self: flex-start;
-  border-radius: 1rem 1rem 1rem 0;
-  padding: 0.4rem 0.8rem;
-}
-
 /* ✅ System message */
 .system {
   align-self: center;
@@ -97,75 +52,139 @@ body.light-mode .system {
   border-radius: 8px;
 }
 
+/* ✅ Your Messages (Right side) */
+.me {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #007bff, #00b4ff);
+  color: #fff;
+  border-radius: 1.2rem 1.2rem 0 1.2rem;
+  padding: 0.6rem 1rem;
+  text-align: right;
+  max-width: 75%;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  word-break: break-word;
+  animation: popIn 0.2s ease-in-out;
+  position: relative;
+}
+
+/* ✅ Others' Messages (Left side) */
+.other {
+  align-self: flex-start;
+  background: #e9ecef;
+  color: #212529;
+  border-radius: 1.2rem 1.2rem 1.2rem 0;
+  padding: 0.6rem 1rem;
+  max-width: 75%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  word-break: break-word;
+  animation: popIn 0.2s ease-in-out;
+  position: relative;
+}
+
+/* ✅ Bubble tails */
+.me::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #007bff, #00b4ff);
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+.other::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: #e9ecef;
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+}
+
+/* ✅ Timestamp */
+.message-time {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 3px;
+  text-align: right;
+}
+.other .message-time { color: rgba(0, 0, 0, 0.5); }
+
+/* ✅ Pop animation */
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.95) translateY(5px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ✅ Mobile adjustments */
+@media (max-width: 768px) {
+  #chat-messages { height: 60vh; }
+  .message { max-width: 85%; font-size: 0.95rem; }
+}
 </style>
 </head>
 
 <body class="dark-mode">
 <div class="container my-4 position-relative">
 
-  <!-- Settings Dropdown -->
+  <!-- ⚙️ Dashboard -->
   <div class="dropdown position-absolute" style="top:10px; right:10px; z-index:15;">
     <button class="btn btn-sm dropdown-toggle" type="button"
-            id="settingsDropdown" data-bs-toggle="dropdown" style="color: turquoise;background-color: #666;"  aria-expanded="false">
+            id="settingsDropdown" data-bs-toggle="dropdown"
+            style="color: turquoise;background-color: #666;" aria-expanded="false">
       <i class="fa-solid fa-table-columns"></i> Dashboard
     </button>
 
     <ul class="dropdown-menu dropdown-menu-end">
-
       <li><a class="dropdown-item" href="/password_change/">Change Password</a></li>
-
-      <!-- 🔐 Lock / Unlock -->
-      <li>
       {% if request.user.username == room.created_by.username %}
+      <li>
         <button id="lock-toggle-btn" class="dropdown-item text-warning" data-room="{{ room.name }}">
-          {% if room.is_locked %}
-            🔓 Unlock Room
-          {% else %}
-            🔒 Lock Room
-          {% endif %}
+          {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
         </button>
-      {% endif %}
       </li>
-
-      <!-- 🌙 / 🌞 THEME SWITCH -->
+      {% endif %}
       <li><button class="dropdown-item" id="toggle-theme-btn">🌙 Night Mode</button></li>
-
       <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-
       <li>
         <button class="dropdown-item" type="button"
                 data-bs-toggle="offcanvas" data-bs-target="#offcanvasUsers">
           Online Users
         </button>
       </li>
-
       <li><button class="dropdown-item text-danger" id="leave-room-btn">🚪 Leave Room</button></li>
     </ul>
   </div>
 
-<br><br><br><br>
+  <br><br><br><br>
 
-<h3 style="color: #e9ecef; display:inline-block;" class="btn btn-primary">
-  {{ room_name }}
-  {% if room.is_locked %} ⛓️ {% endif %}
-</h3>
+  <h3 style="color: #e9ecef; display:inline-block;" class="btn btn-primary">
+    {{ room_name }} {% if room.is_locked %} ⛓️ {% endif %}
+  </h3>
 
-<button id="likeButton" class="btn btn-primary"><i class="fa-solid fa-thumbs-up"></i><span id="likeCount"> 0</span></button>
-<button id="dilikeButton" class="btn btn-danger"><i class="fa-solid fa-thumbs-down"></i><span id="dislikeCount"> 0</span></button>
+  <button id="likeButton" class="btn btn-primary">
+    <i class="fa-solid fa-thumbs-up"></i><span id="likeCount"> 0</span>
+  </button>
+  <button id="dilikeButton" class="btn btn-danger">
+    <i class="fa-solid fa-thumbs-down"></i><span id="dislikeCount"> 0</span>
+  </button>
 
-<!-- Chat Area -->
-<div id="chat-messages" class="position-relative"></div>
+  <!-- Chat Area -->
+  <div id="chat-messages" class="position-relative"></div>
 
-<!-- Input area -->
-<form id="chat-form" class="mt-3 d-flex">
-  {% csrf_token %}
-  <textarea id="chat-message-input" rows="2" class="form-control me-2"
-            placeholder="Type a message..." autocomplete="off"></textarea>
-  <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
-</form>
+  <!-- Input -->
+  <form id="chat-form" class="mt-3 d-flex">
+    {% csrf_token %}
+    <textarea id="chat-message-input" rows="2" class="form-control me-2"
+              placeholder="Type a message..." autocomplete="off"></textarea>
+    <button class="btn btn-primary" id="chat-message-submit" type="submit">Send</button>
+  </form>
 </div>
 
-<!-- Offcanvas Sidebar (Online users) -->
+<!-- Sidebar: Online users -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="online-users-title">Online Users (0)</h5>
@@ -176,18 +195,15 @@ body.light-mode .system {
   </div>
 </div>
 
-<!-- JS -->
 <script>
 /* ------------------ WEBSOCKET CHAT ------------------ */
-
 const roomName = "{{ room_name }}";
 const ws_scheme = location.protocol === "https:" ? "wss" : "ws";
 const chatSocket = new WebSocket(ws_scheme + '://' + location.host + '/ws/chat/' + roomName + '/');
-
 const chatMessages = document.getElementById("chat-messages");
-const chatForm     = document.getElementById("chat-form");
-const inputField   = document.getElementById("chat-message-input");
-const currentUser  = "{{ request.user.username }}";
+const chatForm = document.getElementById("chat-form");
+const inputField = document.getElementById("chat-message-input");
+const currentUser = "{{ request.user.username }}";
 
 chatSocket.onmessage = function(e) {
   const data = JSON.parse(e.data);
@@ -210,13 +226,13 @@ chatSocket.onmessage = function(e) {
   }
 
   const msg = document.createElement("div");
-
   if (data.user === "System") {
     msg.className = "system";
     msg.textContent = data.message + " (" + timeStr + ")";
   } else {
-    msg.className = (data.user.trim() === currentUser.trim()) ? "message me" : "message other";
-    msg.innerHTML = `<span>${data.user === currentUser ? data.message : data.user + ": " + data.message}</span>
+    const isMe = data.user.trim().toLowerCase() === currentUser.trim().toLowerCase();
+    msg.className = isMe ? "message me" : "message other";
+    msg.innerHTML = `<span>${isMe ? data.message : data.user + ": " + data.message}</span>
                      <span class="message-time">${timeStr}</span>`;
   }
 
@@ -232,25 +248,11 @@ chatForm.addEventListener("submit", function(e) {
   }
 });
 
-/* ------------------ LIKE / DISLIKE ------------------ *//* ------------------ LIKE / DISLIKE (WebSocket Broadcast) ------------------ */
+/* ------------------ LIKE / DISLIKE ------------------ */
 let likeCount = 0;
 let dislikeCount = 0;
-
-document.getElementById("likeButton").onclick = () => {
-  likeCount++;
-  chatSocket.send(JSON.stringify({
-    type: "reaction",
-    reaction: "like"
-  }));
-};
-
-document.getElementById("dilikeButton").onclick = () => {
-  dislikeCount++;
-  chatSocket.send(JSON.stringify({
-    type: "reaction",
-    reaction: "dislike"
-  }));
-};
+document.getElementById("likeButton").onclick = () => document.getElementById("likeCount").innerText = ++likeCount;
+document.getElementById("dilikeButton").onclick = () => document.getElementById("dislikeCount").innerText = ++dislikeCount;
 
 /* ------------------ LEAVE ROOM ------------------ */
 document.getElementById("leave-room-btn").onclick = () => {
@@ -262,16 +264,13 @@ document.getElementById("leave-room-btn").onclick = () => {
 document.getElementById("lock-toggle-btn")?.addEventListener("click", async function() {
   const roomName = this.dataset.room;
   const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
   const res = await fetch(`/room/${roomName}/toggle-lock/`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken }
   });
-
   const data = await res.json();
   const btn = document.getElementById("lock-toggle-btn");
   const roomTitle = document.querySelector("h3");
-
   if (data.locked) {
     btn.textContent = "🔓 Unlock Room";
     if (!roomTitle.innerHTML.includes("⛓️")) roomTitle.innerHTML += " ⛓️";
@@ -283,21 +282,15 @@ document.getElementById("lock-toggle-btn")?.addEventListener("click", async func
 
 /* ------------------ THEME MODE ------------------ */
 const themeBtn = document.getElementById("toggle-theme-btn");
-
-// Load saved theme
 document.body.className = localStorage.getItem("theme") || "dark-mode";
 themeBtn.textContent = document.body.classList.contains("dark-mode") ? "🌞 Light Mode" : "🌙 Night Mode";
-
 themeBtn.addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
   document.body.classList.toggle("light-mode");
-
   const isDark = document.body.classList.contains("dark-mode");
   themeBtn.textContent = isDark ? "🌞 Light Mode" : "🌙 Night Mode";
-
   localStorage.setItem("theme", isDark ? "dark-mode" : "light-mode");
 });
-
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
