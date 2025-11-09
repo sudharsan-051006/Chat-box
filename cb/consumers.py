@@ -4,7 +4,7 @@ import asyncio
 import time
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-# ---------------- In-Memory State ----------------
+# ---------------- IN-MEMORY STATE ----------------
 ROOM_USERS = {}              # { room_name: [online_usernames] }
 ROOM_TIMERS = {}             # { room_name: asyncio.Task }
 LOCKED_ALLOWED_USERS = {}    # { room_name: [permanent allowed usernames] }
@@ -17,6 +17,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # ---------------------- CONNECTION ----------------------
     async def connect(self):
+        """When a user joins a room."""
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
         user = self.scope["user"]
@@ -25,49 +26,55 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=403)
             return
 
-        self.user_name = user.username.strip()
+        # normalize username (case-insensitive, no spaces)
+        self.user_name = user.username.strip().lower()
         self.user_color = random.choice(
             ["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"]
         )
 
-        # If room locked → check allowed list
-        allowed = LOCKED_ALLOWED_USERS.get(self.room_name)
-        if allowed is not None and self.user_name not in allowed:
+        # --- Check Lock Permissions ---
+        allowed_list = LOCKED_ALLOWED_USERS.get(self.room_name)
+        print(f"[DEBUG] checking {self.user_name} in {allowed_list}")
+        if allowed_list is not None and self.user_name not in allowed_list:
             print(f"[LOCKED] ❌ {self.user_name} blocked from {self.room_name}")
             await self.close(code=403)
             return
 
-        # Track timestamp for refresh handling
+        # Mark seen (for detecting refresh reconnect)
         LAST_SEEN[(self.room_name, self.user_name)] = time.time()
 
-        # Add to online list
+        # Add to online user list
         ROOM_USERS.setdefault(self.room_name, [])
         if self.user_name not in ROOM_USERS[self.room_name]:
             ROOM_USERS[self.room_name].append(self.user_name)
 
-        # Cancel delete timer if needed
+        # Cancel delete timer if room was empty earlier
         if self.room_name in ROOM_TIMERS:
             ROOM_TIMERS[self.room_name].cancel()
             del ROOM_TIMERS[self.room_name]
 
+        # Join group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
+        # Notify others
         await self.channel_layer.group_send(
             self.room_group_name,
             {"type": "user_join", "user": self.user_name},
         )
 
     async def disconnect(self, close_code):
+        """When user leaves (or refreshes)."""
         if not self.user_name:
             return
 
+        # Ignore disconnects that are quick refresh reconnects (<3s)
         last_seen = LAST_SEEN.get((self.room_name, self.user_name), 0)
-        # Ignore quick refreshes (<3s)
         if time.time() - last_seen < 3:
             print(f"[REFRESH] Ignoring disconnect for {self.user_name}")
             return
 
+        print(f"[DISCONNECT] {self.user_name} left {self.room_name}")
         if self.room_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_name]:
             ROOM_USERS[self.room_name].remove(self.user_name)
 
@@ -78,13 +85,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-        # If room empty → start deletion timer
+        # Start deletion timer if room is empty
         if not ROOM_USERS.get(self.room_name):
             ROOM_TIMERS[self.room_name] = asyncio.create_task(
                 self.delete_room_after_timeout()
             )
 
     async def delete_room_after_timeout(self):
+        """Delete room if empty for 30 seconds."""
         await asyncio.sleep(30)
         if not ROOM_USERS.get(self.room_name):
             print(f"🗑 Deleted room {self.room_name} (empty 30s)")
@@ -94,25 +102,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # ---------------------- RECEIVE ----------------------
     async def receive(self, text_data):
+        """Handle incoming messages and special commands."""
         data = json.loads(text_data)
         message = data.get("message", "").strip()
         command = data.get("command", "").strip()
 
-        # 🔒 Handle locking command
+        # 🔒 Lock room command
         if command == "lock_room":
-            users_now = ROOM_USERS.get(self.room_name, []).copy()
-            LOCKED_ALLOWED_USERS[self.room_name] = users_now  # persistent allowlist
-            print(f"[LOCKED] Room {self.room_name} locked for {users_now}")
+            current_users = ROOM_USERS.get(self.room_name, [])
+            # Save permanent allowed list (case-insensitive)
+            LOCKED_ALLOWED_USERS[self.room_name] = [u.strip().lower() for u in current_users]
+            print(f"[LOCKED] Room {self.room_name} locked for {current_users}")
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     "type": "system_message",
-                    "message": f"🔒 Room locked! Allowed: {', '.join(users_now)}",
+                    "message": f"🔒 Room locked! Allowed: {', '.join(current_users)}",
                 },
             )
             return
 
-        # normal chat message
+        # 💬 Regular chat message
         if not message:
             return
 
@@ -126,7 +136,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
-    # ---------------------- EVENTS ----------------------
+    # ---------------------- MESSAGE TYPES ----------------------
     async def chat_message(self, event):
         await self.send(json.dumps({
             "type": "chat",
