@@ -44,19 +44,22 @@ body.light-mode .system { color: #666; }
 
 /* ✅ Message bubble base */
 .message {
-  display: inline-block;
+  display: flex;                 /* use flex for vertical stacking */
+  flex-direction: column;
+  align-items: flex-start;
   padding: 0.6rem 1rem;
   border-radius: 1rem;
-  white-space: pre-wrap;        /* ✅ PRESERVES newlines and spaces */
+  white-space: pre-wrap;         /* preserves newlines and spaces */
   word-break: break-word;
   overflow-wrap: break-word;
   max-width: 75%;
   line-height: 1.4;
   animation: popIn 0.2s ease-in-out;
   font-family: "Segoe UI", sans-serif;
+  min-width: 2rem;               /* ✅ ensures even single-letter messages show */
 }
 
-/* ✅ Your messages */
+/* ✅ Your messages (right side) */
 .me {
   align-self: flex-end;
   background: linear-gradient(135deg, #007bff, #00b4ff);
@@ -65,9 +68,10 @@ body.light-mode .system { color: #666; }
   text-align: left;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
   position: relative;
+  align-items: flex-end;         /* aligns text nicely to right */
 }
 
-/* ✅ Others' messages */
+/* ✅ Other users' messages (left side) */
 .other {
   align-self: flex-start;
   background: #e9ecef;
@@ -75,6 +79,15 @@ body.light-mode .system { color: #666; }
   border-radius: 1rem 1rem 1rem 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
+  align-items: flex-start;
+}
+
+/* ✅ Fix for single-letter or punctuation-only messages */
+.message span:first-child {
+  display: inline-block;
+  min-width: 1.5rem;             /* ✅ visible even if message = "a" or "?" */
+  text-align: center;
+  white-space: pre-wrap;
 }
 
 /* ✅ System message */
@@ -94,7 +107,9 @@ body.light-mode .system { color: #666; }
   margin-top: 4px;
   text-align: right;
 }
-.other .message-time { color: rgba(0, 0, 0, 0.5); }
+.other .message-time {
+  color: rgba(0, 0, 0, 0.5);
+}
 
 /* ✅ Animation */
 @keyframes popIn {
