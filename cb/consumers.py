@@ -24,7 +24,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_room(self, name):
-        """Fetch a room object by name."""
         try:
             return Room.objects.get(name=name)
         except Room.DoesNotExist:
@@ -32,14 +31,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def add_allowed_username(self, room_name, username):
-        """Add username to room.allowed_usernames (JSON) and sync M2M."""
         room = Room.objects.get(name=room_name)
         if not isinstance(room.allowed_usernames, list):
             room.allowed_usernames = []
 
         if username not in room.allowed_usernames:
             room.allowed_usernames.append(username)
-            room.allowed_usernames = list(dict.fromkeys(room.allowed_usernames))  # dedupe
+            room.allowed_usernames = list(dict.fromkeys(room.allowed_usernames))
             room.save()
 
         try:
@@ -51,7 +49,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def user_is_allowed(self, room_name, username):
-        """Check if user is allowed based on allowed_usernames JSON."""
         try:
             room = Room.objects.get(name=room_name)
             allowed = room.allowed_usernames if isinstance(room.allowed_usernames, list) else []
@@ -61,7 +58,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def lock_room_with_usernames(self, room_name, usernames):
-        """Lock a room and persist all usernames to allowed_usernames."""
         try:
             room = Room.objects.get(name=room_name)
         except Room.DoesNotExist:
@@ -88,22 +84,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def sync_allowed_user_m2m(self, room_name):
-        """Ensure M2M matches allowed_usernames JSON."""
         try:
             room = Room.objects.get(name=room_name)
         except Room.DoesNotExist:
             return
 
         allowed_usernames = room.allowed_usernames if isinstance(room.allowed_usernames, list) else []
-
         for uname in allowed_usernames:
-            uname_norm = uname.strip().lower()
             try:
-                u = User.objects.get(username=uname_norm)
+                u = User.objects.get(username=uname.strip().lower())
                 room.allowed_users.add(u)
             except User.DoesNotExist:
                 continue
-
         room.save()
 
     # ---------------------- Connection Logic ----------------------
@@ -126,17 +118,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         username = user.username.strip().lower()
         is_allowed = await self.user_is_allowed(self.room_name, username)
 
-        print(f"[DEBUG] room={self.room_name} locked={room.is_locked} user={username} allowed={is_allowed} db_allowed={room.allowed_usernames}")
-
         if room.is_locked and not is_allowed:
-            print(f"[DEBUG] {username} blocked (room locked)")
             await self.close(code=403)
             return
 
         if not room.is_locked and not is_allowed:
             await self.add_allowed_username(self.room_name, username)
             await self.sync_allowed_user_m2m(self.room_name)
-            print(f"[DEBUG] {username} auto-added and synced M2M")
 
         self.user_name = username
         self.user_color = random.choice(["#3498db", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c"])
@@ -164,7 +152,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         last_seen = LAST_SEEN.get((self.room_group_name, self.user_name), 0)
         if time.time() - last_seen < 3:
-            print(f"[DEBUG] Ignored disconnect for {self.user_name} (likely refresh)")
             return
 
         if self.room_group_name in ROOM_USERS and self.user_name in ROOM_USERS[self.room_group_name]:
@@ -183,41 +170,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await asyncio.sleep(30)
         if not ROOM_USERS.get(self.room_group_name):
             await database_sync_to_async(Room.objects.filter(name=self.room_name).delete)()
-            print(f"🗑 Room {self.room_name} deleted (empty 30s)")
             ROOM_USERS.pop(self.room_group_name, None)
             ROOM_TIMERS.pop(self.room_group_name, None)
 
     # ---------------------- Message Handling ----------------------
 
     async def receive(self, text_data):
-        """Handles all WebSocket messages."""
         data = json.loads(text_data)
         message = data.get("message", "").strip()
         command = data.get("command")
         reaction = data.get("reaction")
 
-        # ✅ Like/Dislike broadcast
+        # ✅ Reactions
         if reaction in ["like", "dislike"]:
             REACTIONS.setdefault(self.room_group_name, {"likes": 0, "dislikes": 0})
-
             if reaction == "like":
                 REACTIONS[self.room_group_name]["likes"] += 1
-            elif reaction == "dislike":
+            else:
                 REACTIONS[self.room_group_name]["dislikes"] += 1
 
             counts = REACTIONS[self.room_group_name]
-
             await self.channel_layer.group_send(
                 self.room_group_name,
-                {
-                    "type": "reaction_update",
-                    "likes": counts["likes"],
-                    "dislikes": counts["dislikes"],
-                },
+                {"type": "reaction_update", **counts},
             )
             return
 
-        # ✅ Lock room
+        # ✅ Lock command
         if command == "lock_room":
             online_users = ROOM_USERS.get(self.room_group_name, [])
             success = await self.lock_room_with_usernames(self.room_name, online_users)
@@ -231,36 +210,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
             return
 
-        # ✅ Chat messages
+        # ✅ Ignore empty
         if not message:
             return
 
-        encoded_msg, codes = encode_text(message)
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "chat_message",
-                "message": encoded_msg,
-                "codes": codes,
-                "user": self.user_name,
-                "color": self.user_color,
-            },
-        )
-
-    async def reaction_update(self, event):
-        """Broadcast like/dislike counts to all users."""
-        await self.send(
-            text_data=json.dumps(
+        # ✅ Encode only if length > 2
+        if len(message) > 2:
+            encoded_msg, codes = encode_text(message)
+            await self.channel_layer.group_send(
+                self.room_group_name,
                 {
-                    "type": "reaction",
-                    "likes": event["likes"],
-                    "dislikes": event["dislikes"],
-                }
+                    "type": "chat_message",
+                    "message": encoded_msg,
+                    "codes": codes,
+                    "user": self.user_name,
+                    "color": self.user_color,
+                    "compressed": True,
+                },
             )
-        )
+        else:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "chat_message",
+                    "message": message,
+                    "user": self.user_name,
+                    "color": self.user_color,
+                    "compressed": False,
+                },
+            )
 
     async def chat_message(self, event):
-        decoded = decode_text(event["message"], event["codes"])
+        """Handle both encoded and normal messages."""
+        if event.get("compressed"):
+            decoded = decode_text(event["message"], event["codes"])
+        else:
+            decoded = event["message"]
+
         await self.send(
             text_data=json.dumps(
                 {
@@ -271,6 +257,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
         )
+
+    async def reaction_update(self, event):
+        await self.send(text_data=json.dumps({"type": "reaction", **event}))
 
     # ---------------------- System Events ----------------------
 
@@ -304,6 +293,4 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def broadcast_user_list(self, event):
-        await self.send(
-            text_data=json.dumps({"type": "user_list", "users": event["users"]})
-        )
+        await self.send(text_data=json.dumps({"type": "user_list", "users": event["users"]}))
