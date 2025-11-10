@@ -49,18 +49,17 @@ body.light-mode .system { color: #666; }
   align-items: flex-start;
   padding: 0.6rem 1rem;
   border-radius: 1rem;
-  white-space: pre-wrap;      /* ✅ preserves newlines and spaces */
-  word-break: break-word;     /* ✅ allows wrapping when long */
+  white-space: pre-wrap;          /* ✅ preserves newlines and spaces */
+  word-break: break-word;         /* ✅ allows wrapping when long */
   overflow-wrap: break-word;
-  max-width: 75%;
+  font-family: "Courier New", monospace;  /* ✅ keeps copied text shape */
+  font-size: 0.95rem;
   line-height: 1.4;
   animation: popIn 0.2s ease-in-out;
-  font-family: "Segoe UI", monospace;  /* ✅ monospace keeps copied shape */
-  font-size: 0.95rem;
+  max-width: 75%;
   min-width: 2rem;
   background-clip: padding-box;
 }
-
 
 /* ✅ Your messages (right side) */
 .me {
@@ -74,19 +73,6 @@ body.light-mode .system { color: #666; }
   align-items: flex-end;
 }
 
-/* ✅ Preserve exact formatting for code-like messages */
-.message pre {
-  background: rgba(0,0,0,0.1);
-  padding: 0.6rem 0.8rem;
-  border-radius: 10px;
-  font-family: "Courier New", monospace;
-  white-space: pre-wrap; /* Keeps spacing & newlines */
-  word-wrap: break-word;
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-
 /* ✅ Other users' messages (left side) */
 .other {
   align-self: flex-start;
@@ -98,14 +84,13 @@ body.light-mode .system { color: #666; }
   align-items: flex-start;
 }
 
-/* ✅ Fix for single-letter or punctuation-only messages */
-.message span:first-child {
-  display: inline-block;
-  min-width: 1.5rem;          /* ✅ Ensures letters like 'a', '?' are visible */
-  text-align: center;
-  white-space: pre-wrap;
-  line-height: 1.4;
-  overflow: visible;
+/* ✅ All messages preserve exact formatting */
+.message span {
+  display: block;
+  width: 100%;
+  white-space: pre-wrap;          /* ✅ keeps indentation & newlines */
+  font-family: "Courier New", monospace;
+  overflow-x: auto;
 }
 
 /* ✅ System message */
@@ -247,9 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
       msg.className = isMe ? "message me" : "message other";
 
       const textSpan = document.createElement("span");
-      textSpan.style.whiteSpace = "pre-wrap";  // ✅ keep all newlines
-      textSpan.style.fontFamily = "monospace"; // ✅ preserve shape
-      textSpan.textContent = isMe ? data.message : `${data.user}: ${data.message}`;
+      textSpan.style.whiteSpace = "pre-wrap";   // ✅ Preserve line breaks
+      textSpan.style.fontFamily = "Courier New, monospace"; // ✅ Preserve shape
+      textSpan.textContent = isMe ? data.message : `${data.user}: \n${data.message}`;
 
       const timeSpan = document.createElement("span");
       timeSpan.className = "message-time";
