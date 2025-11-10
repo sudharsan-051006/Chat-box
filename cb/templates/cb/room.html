@@ -44,19 +44,19 @@ body.light-mode .system { color: #666; }
 
 /* ✅ Message bubble base */
 .message {
-  display: flex;                 /* use flex for vertical stacking */
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0.6rem 1rem;
   border-radius: 1rem;
-  white-space: pre-wrap;         /* preserves newlines and spaces */
+  white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
   max-width: 75%;
   line-height: 1.4;
   animation: popIn 0.2s ease-in-out;
   font-family: "Segoe UI", sans-serif;
-  min-width: 2rem;               /* ✅ ensures even single-letter messages show */
+  min-width: 2rem;
 }
 
 /* ✅ Your messages (right side) */
@@ -68,7 +68,7 @@ body.light-mode .system { color: #666; }
   text-align: left;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
   position: relative;
-  align-items: flex-end;         /* aligns text nicely to right */
+  align-items: flex-end;
 }
 
 /* ✅ Other users' messages (left side) */
@@ -85,9 +85,11 @@ body.light-mode .system { color: #666; }
 /* ✅ Fix for single-letter or punctuation-only messages */
 .message span:first-child {
   display: inline-block;
-  min-width: 1.5rem;             /* ✅ visible even if message = "a" or "?" */
+  min-width: 1.5rem;          /* ✅ Ensures letters like 'a', '?' are visible */
   text-align: center;
   white-space: pre-wrap;
+  line-height: 1.4;
+  overflow: visible;
 }
 
 /* ✅ System message */
