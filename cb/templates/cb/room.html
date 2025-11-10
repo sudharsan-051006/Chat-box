@@ -49,15 +49,18 @@ body.light-mode .system { color: #666; }
   align-items: flex-start;
   padding: 0.6rem 1rem;
   border-radius: 1rem;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre-wrap;      /* ✅ preserves newlines and spaces */
+  word-break: break-word;     /* ✅ allows wrapping when long */
   overflow-wrap: break-word;
   max-width: 75%;
   line-height: 1.4;
   animation: popIn 0.2s ease-in-out;
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Segoe UI", monospace;  /* ✅ monospace keeps copied shape */
+  font-size: 0.95rem;
   min-width: 2rem;
+  background-clip: padding-box;
 }
+
 
 /* ✅ Your messages (right side) */
 .me {
@@ -70,6 +73,19 @@ body.light-mode .system { color: #666; }
   position: relative;
   align-items: flex-end;
 }
+
+/* ✅ Preserve exact formatting for code-like messages */
+.message pre {
+  background: rgba(0,0,0,0.1);
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  font-family: "Courier New", monospace;
+  white-space: pre-wrap; /* Keeps spacing & newlines */
+  word-wrap: break-word;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 
 /* ✅ Other users' messages (left side) */
 .other {
@@ -231,7 +247,10 @@ document.addEventListener("DOMContentLoaded", () => {
       msg.className = isMe ? "message me" : "message other";
 
       const textSpan = document.createElement("span");
+      textSpan.style.whiteSpace = "pre-wrap";  // ✅ keep all newlines
+      textSpan.style.fontFamily = "monospace"; // ✅ preserve shape
       textSpan.textContent = isMe ? data.message : `${data.user}: ${data.message}`;
+
       const timeSpan = document.createElement("span");
       timeSpan.className = "message-time";
       timeSpan.textContent = timeStr;
