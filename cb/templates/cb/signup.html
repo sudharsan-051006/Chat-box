@@ -69,14 +69,22 @@
       Already have an account? <a href="{% url 'login' %}">Login</a>
     </p>
   </div>
-  <script>
- function togglePass() {
-  // Find all password fields inside this form
-  document.querySelectorAll('input[type="password"]').forEach(function (field) {
-    field.type = field.type === "password" ? "text" : "password";
+<script>
+function togglePass() {
+  var form = document.querySelector("form");  // your current form
+  var inputs = form.querySelectorAll('input[type="password"], input[type="text"].password-field');
+
+  inputs.forEach(function (field) {
+    if (field.type === "password") {
+      field.type = "text";
+      field.classList.add("password-field");
+    } else {
+      field.type = "password";
+      field.classList.remove("password-field");
+    }
   });
 }
-  </script>
+</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
