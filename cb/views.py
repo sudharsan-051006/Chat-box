@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.db import connection
+from .forms import UsernameUpdateForm
 from django.http import JsonResponse
 
 
@@ -84,6 +85,18 @@ def toggle_lock(request, room_name):
             return JsonResponse({"status": "error", "message": "You are not allowed to lock this room."}, status=403)
     else:
         return JsonResponse({"status": "error", "message": "Invalid request method."}, status=400)
+
+@login_required
+def update_username(request):
+    if request.method == "POST":
+        form = UsernameUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("login")
+    else:
+        form = UsernameUpdateForm(instance=request.user)
+
+    return render(request, "update_username.html", {"form": form})
 
 # def fix_allowed_users_table(request):
 #     """Create the missing cb_room_allowed_users table if it doesn't exist"""
