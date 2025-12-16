@@ -233,23 +233,6 @@
   <div class="spinner-border text-info" role="status"></div>
   <p class="mt-3">Loading Chat Rooms...</p>
 </div>
-<script>
-  (function () {
-    const firstVisit = !sessionStorage.getItem("visited_chat_rooms");
-
-    let slowNet = false;
-    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (c) {
-      slowNet = c.effectiveType?.includes("2g") || c.downlink < 1.5;
-    }
-
-    // ❌ Hide immediately if NOT needed
-    if (!firstVisit && !slowNet) {
-      document.getElementById("page-loader").style.display = "none";
-    }
-  })();
-</script>
-
     <div class="card">
 
       <!-- Settings Dropdown -->
@@ -350,23 +333,6 @@ chatSocket.onmessage = function (e) {
   }
 };
 
-      const loader = document.getElementById("page-loader");
-
-  // Detect first visit
-  const firstVisit = !sessionStorage.getItem("visited_chat_rooms");
-
-  // Detect slow network (fallback safe)
-  function isSlowNetwork() {
-    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    return c && (c.effectiveType.includes("2g") || c.downlink < 1.5);
-  }
-
-  if (firstVisit || isSlowNetwork()) {
-    loader.style.display = "flex";
-  } else {
-    loader.style.display = "none";
-  }
-
   // Hide loader AFTER page is usable
   window.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
@@ -379,5 +345,23 @@ chatSocket.onmessage = function (e) {
   </script>
   <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  const loader = document.getElementById("page-loader");
+
+  // Safety: minimum display time (prevents flash)
+  const MIN_LOADER_TIME = 800;
+  const startTime = Date.now();
+
+  window.addEventListener("load", () => {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, MIN_LOADER_TIME - elapsed);
+
+    setTimeout(() => {
+      loader.classList.add("hide");
+    }, remaining);
+  });
+</script>
+
 </body>
 </html>
