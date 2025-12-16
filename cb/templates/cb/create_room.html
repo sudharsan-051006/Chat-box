@@ -334,37 +334,30 @@ chatSocket.onmessage = function (e) {
   }
 };
 
-      function isSlowNetwork() {
-    const connection =
-      navigator.connection ||
-      navigator.mozConnection ||
-      navigator.webkitConnection;
+      const loader = document.getElementById("page-loader");
 
-    if (!connection) return false;
+  // Detect first visit
+  const firstVisit = !sessionStorage.getItem("visited_chat_rooms");
 
-    return (
-      connection.effectiveType === "slow-2g" ||
-      connection.effectiveType === "2g" ||
-      connection.downlink < 1.5
-    );
+  // Detect slow network (fallback safe)
+  function isSlowNetwork() {
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    return c && (c.effectiveType.includes("2g") || c.downlink < 1.5);
   }
 
-  window.addEventListener("load", () => {
-    const firstVisit = !localStorage.getItem("visited_chat_rooms");
-    const slowNet = isSlowNetwork();
+  if (firstVisit || isSlowNetwork()) {
+    loader.style.display = "flex";
+  } else {
+    loader.style.display = "none";
+  }
 
-    if (firstVisit || slowNet) {
-      const loader = document.getElementById("page-loader");
-      loader.style.display = "flex";
-
-      setTimeout(() => {
-        loader.classList.add("hide");
-      }, 3000);
-
-      localStorage.setItem("visited_chat_rooms", "true");
-    }
+  // Hide loader AFTER page is usable
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      loader.classList.add("hide");
+      sessionStorage.setItem("visited_chat_rooms", "true");
+    }, 3000);
   });
-
     console.log("First visit:", firstVisit);
     console.log("Slow network:", slowNet);
   </script>
