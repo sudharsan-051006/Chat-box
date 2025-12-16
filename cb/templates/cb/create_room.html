@@ -162,21 +162,22 @@
     #page-loader {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 9999;
+  background: rgba(0, 0, 0, 0.97);
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   color: #0dcaf0;
   font-size: 1.1rem;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  transition: opacity 0.4s ease;
 }
 
 #page-loader.hide {
   opacity: 0;
-  visibility: hidden;
+  pointer-events: none;
 }
+
 
     /* Footer */
     footer {
@@ -228,11 +229,26 @@
   <!-- Main Content -->
   <main>
 
-    <!-- Page Loader -->
-<div id="page-loader" style="display:none;">
+<div id="page-loader">
   <div class="spinner-border text-info" role="status"></div>
   <p class="mt-3">Loading Chat Rooms...</p>
 </div>
+<script>
+  (function () {
+    const firstVisit = !sessionStorage.getItem("visited_chat_rooms");
+
+    let slowNet = false;
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (c) {
+      slowNet = c.effectiveType?.includes("2g") || c.downlink < 1.5;
+    }
+
+    // ❌ Hide immediately if NOT needed
+    if (!firstVisit && !slowNet) {
+      document.getElementById("page-loader").style.display = "none";
+    }
+  })();
+</script>
 
     <div class="card">
 
