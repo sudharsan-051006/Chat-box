@@ -14,6 +14,7 @@ ALLOWED_HOSTS = [
     "localhost",
 ]
 
+RECAPTCHA_SECRET_KEY = os.environ.get("RECAPTCHA_SECRET_KEY")
 
 # Installed apps
 INSTALLED_APPS = [
