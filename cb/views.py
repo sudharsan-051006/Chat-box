@@ -13,7 +13,7 @@ from django.http import HttpResponseRedirect
 from django.db import connection
 from .forms import UsernameUpdateForm
 from django.http import JsonResponse
-
+import requests
 
 
 # 🧱 SIGNUP VIEW
