@@ -275,38 +275,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ================= RENDER ================= */
   function renderMessage(data) {
-    if (!data || !data.user || !data.message) return;
+  if (!data || !data.user || !data.message) return;
 
-    if (
-      data.user !== "System" &&
-      visibleUsers.size > 0 &&
-      !visibleUsers.has(data.user)
-    ) return;
+  if (
+    data.user !== "System" &&
+    visibleUsers.size > 0 &&
+    !visibleUsers.has(data.user)
+  ) return;
 
-    const div = document.createElement("div");
+  const div = document.createElement("div");
 
-    if (data.user === "System") {
-      div.className = "system";
-      div.textContent = data.message;
-    } else {
-      const isMe = data.user === currentUser;
-      div.className = "message " + (isMe ? "me" : "other");
+  if (data.user === "System") {
+    div.className = "system";
+    div.textContent = data.message;
+  } else {
+    const isMe =
+      data.user.trim().toLowerCase() ===
+      currentUser.trim().toLowerCase();
 
-      const text = document.createElement("div");
-      text.textContent = isMe
-        ? data.message
-        : data.user + ": " + data.message;
+    div.className = "message " + (isMe ? "me" : "other");
 
-      const time = document.createElement("div");
-      time.className = "msg-time";
-      time.textContent = data.time;
+    const text = document.createElement("div");
+    text.textContent = isMe
+      ? data.message
+      : data.user + ": " + data.message;
 
-      div.append(text, time);
-    }
+    const time = document.createElement("div");
+    time.className = "msg-time";
+    time.textContent = data.time;
 
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    div.append(text, time);
   }
+
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 
   /* ================= WEBSOCKET ================= */
   ws.onmessage = function (e) {
