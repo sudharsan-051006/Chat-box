@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
 from .models import Room
 from django.http import HttpResponse
 from django.core.management import call_command
@@ -14,8 +15,13 @@ from django.db import connection
 from .forms import UsernameUpdateForm
 from django.http import JsonResponse
 import requests
+import random
 
-
+def generate_captcha(request):
+    a = random.randint(1, 9)
+    b = random.randint(1, 9)
+    request.session['captcha_answer'] = a + b
+    return f"{a} + {b}"
 
 def signup(request):
     if request.method == "POST":
@@ -38,6 +44,22 @@ def index(request):
     rooms = Room.objects.all()
     return render(request, 'cb/create_room.html', {'rooms': rooms})
 
+class CustomLoginView(LoginView):
+    template_name = "cb/login.html"
+
+    def get(self, request, *args, **kwargs):
+        request.session['captcha_question'] = generate_captcha(request)
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        user_answer = request.POST.get("captcha")
+        correct_answer = request.session.get("captcha_answer")
+
+        if not user_answer or int(user_answer) != correct_answer:
+            messages.error(request, "Invalid captcha")
+            return redirect("login")
+
+        return super().post(request, *args, **kwargs)
 
 # 🏗️ CREATE NEW ROOM
 @login_required(login_url="/login/")
