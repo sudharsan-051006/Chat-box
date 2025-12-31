@@ -11,12 +11,29 @@
 
   <style>
     body {
-      background: #f8f9fa;
+      min-height: 100vh;
+      margin: 0;
+    
+      background: linear-gradient(
+        120deg,
+        #fffaf0,
+        #fdebd0,
+        #f7d9b9
+      );
+      background-size: 300% 300%;
+      animation: smoothMove 10s ease infinite;
+    
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
     }
+    
+    @keyframes smoothMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     .card {
       width: 380px;
       border-radius: 12px;
