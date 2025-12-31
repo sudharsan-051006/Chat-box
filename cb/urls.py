@@ -5,7 +5,6 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path("signup/", views.signup, name="signup"),
-    path('signup/', views.signup_view, name='signup'),
     path("login/", auth_views.LoginView.as_view(template_name="cb/login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path('password_change/', auth_views.PasswordChangeView.as_view(template_name='cb/password_change.html'), name='password_change'),
