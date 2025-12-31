@@ -56,12 +56,19 @@
         </div>
       {% endfor %}
 
-      <div class="g-recaptcha"
-     data-sitekey="6Lf2tjUsAAAAAB6M7awXXtWWLg2CX_ErXx8RaZOe">
-</div>
-
+      <div class="mb-3">
+        <label><strong>Solve:</strong> {{ request.session.captcha_question }}</label>
+        <input type="number" name="captcha" class="form-control" required>
+      </div>
       <button type="submit" class="btn btn-custom w-100">Login</button>
     </form>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
 
     <p class="text-center mt-3">
       Don’t have an account? <a href="{% url 'signup' %}">Sign Up</a>
