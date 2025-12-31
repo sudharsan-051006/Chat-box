@@ -46,30 +46,30 @@
 <form method="post">
   {% csrf_token %}
 
-  {% for field in form %}
-    <div class="mb-3 text-start">
-      {{ field.label_tag }}
-      {{ field }}
-      {% if field.errors %}
-        <div class="text-danger small">{{ field.errors }}</div>
-      {% endif %}
-    </div>
-  {% endfor %}
-    <div class="mb-3 text-start">
-        <label for="email">Email</label>
-        <input
-          type="email"
-          name="email"
-          id="email"
-          class="form-control"
-          placeholder="Enter your email"
-          required
-        >
-    </div>
+  <div class="mb-3 text-start">
+    <label>Username</label>
+    <input type="text" name="username" class="form-control" required>
+  </div>
+
+  <div class="mb-3 text-start">
+    <label>Email</label>
+    <input type="email" name="email" class="form-control" required>
+  </div>
+
+  <div class="mb-3 text-start">
+    <label>Password</label>
+    <input type="password" name="password1" class="form-control" required>
+  </div>
+
+  <div class="mb-3 text-start">
+    <label>Confirm Password</label>
+    <input type="password" name="password2" class="form-control" required>
+  </div>
+
   <!-- Show / Hide Password -->
   <div class="form-check mb-3">
-    <input type="checkbox" class="form-check-input" id="showPassword" onclick="togglePass()">
-    <label for="showPassword" class="form-check-label">Show Password</label>
+    <input type="checkbox" class="form-check-input" onclick="togglePass()">
+    <label class="form-check-label">Show Password</label>
   </div>
 
   <button type="submit" class="btn btn-custom w-100">Sign Up</button>
