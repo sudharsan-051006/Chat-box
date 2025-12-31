@@ -57,7 +57,7 @@
       {% endfor %}
 
       <div class="mb-3">
-        <label><strong>Enter the Solve Captcha :</strong> {{ request.session.captcha_question }}</label>
+        <label><strong>Solve the Captcha :</strong> {{ request.session.captcha_question }}</label>
         <input type="number" name="captcha" class="form-control" required>
       </div>
       <button type="submit" class="btn btn-custom w-100">Login</button>
