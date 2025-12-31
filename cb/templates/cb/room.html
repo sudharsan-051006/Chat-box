@@ -8,50 +8,107 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-/* ===== RESET ===== */
+/* ================= RESET ================= */
 html, body {
   height: 100%;
   margin: 0;
-  background: #343541;
-  color: #ececf1;
   font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
 
-/* ===== MAIN LAYOUT ===== */
+/* ================= DARK MODE ================= */
+body.dark-mode {
+  background: #343541;
+  color: #ececf1;
+}
+
+body.dark-mode .sidebar {
+  background: #202123;
+  color: #ececf1;
+  border-right: 1px solid #444;
+}
+
+body.dark-mode .chat-header,
+body.dark-mode .chat-input {
+  background: #343541;
+  border-color: #444;
+}
+
+body.dark-mode .message.me {
+  background: #0d6efd;
+  color: white;
+}
+
+body.dark-mode .message.other {
+  background: #444654;
+  color: #ececf1;
+}
+
+body.dark-mode textarea {
+  background: #40414f;
+  color: white;
+}
+
+body.dark-mode #online-users li {
+  background: #2f2f2f;
+  color: white;
+}
+
+/* ================= LIGHT MODE ================= */
+body.light-mode {
+  background: #f8f9fa;
+  color: #212529;
+}
+
+body.light-mode .sidebar {
+  background: #ffffff;
+  color: #212529;
+  border-right: 1px solid #ddd;
+}
+
+body.light-mode .chat-header,
+body.light-mode .chat-input {
+  background: #ffffff;
+  border-color: #ddd;
+}
+
+body.light-mode .message.me {
+  background: #0d6efd;
+  color: white;
+}
+
+body.light-mode .message.other {
+  background: #e9ecef;
+  color: #212529;
+}
+
+body.light-mode textarea {
+  background: #ffffff;
+  color: #212529;
+  border: 1px solid #ced4da;
+}
+
+body.light-mode #online-users li {
+  background: #f1f3f5;
+  color: #212529;
+}
+
+/* ================= LAYOUT ================= */
 .app {
   display: flex;
   height: 100vh;
 }
 
-/* ===== SIDEBAR ===== */
 .sidebar {
   width: 260px;
-  background: #202123;
-  border-right: 1px solid #444;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  padding: 12px;
 }
 
 .sidebar h6 {
-  color: #aaa;
   font-size: 0.75rem;
-  margin-bottom: 10px;
-}
-
-.sidebar a, .sidebar button {
-  background: transparent;
-  color: #ececf1;
-  border: none;
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 6px;
-  width: 100%;
-}
-
-.sidebar a:hover,
-.sidebar button:hover {
-  background: #343541;
+  opacity: 0.7;
+  margin-bottom: 6px;
 }
 
 .chat {
@@ -62,9 +119,8 @@ html, body {
 
 .chat-header {
   padding: 12px 16px;
-  border-bottom: 1px solid #444;
-  background: #343541;
   font-weight: 600;
+  border-bottom: 1px solid;
 }
 
 .chat-body {
@@ -89,26 +145,12 @@ html, body {
   word-break: break-word;
 }
 
-.me {
-  align-self: flex-end;
-  background: #0d6efd;
-  color: #fff;
-}
-
-.other {
-  align-self: flex-start;
-  background: #444654;
-}
-
-.system {
-  text-align: center;
-  opacity: 0.7;
-}
+.me { align-self: flex-end; }
+.other { align-self: flex-start; }
 
 .chat-input {
-  border-top: 1px solid #444;
   padding: 16px;
-  background: #343541;
+  border-top: 1px solid;
 }
 
 .chat-input form {
@@ -120,11 +162,9 @@ html, body {
 
 textarea {
   resize: none;
-  background: #40414f;
-  color: #fff;
-  border: none;
   border-radius: 6px;
   padding: 10px;
+  flex: 1;
 }
 
 textarea:focus { outline: none; }
@@ -132,33 +172,39 @@ textarea:focus { outline: none; }
 button.send {
   background: #0d6efd;
   border: none;
-  padding: 0 20px;
   border-radius: 6px;
   color: white;
+  padding: 0 20px;
 }
 </style>
 </head>
 
-<body>
+<body class="dark-mode">
 
 <div class="app">
 
+  <!-- SIDEBAR -->
   <div class="sidebar">
+
     <h6>ROOM</h6>
     <div class="mb-2">{{ room_name }}</div>
 
-    <h6>ACTIONS</h6>
+    <hr>
 
-    {% if request.user == room.created_by %}
-    <button id="lock-toggle-btn">
-      {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
+    <h6 id="online-users-title">Online Users (0)</h6>
+    <ul id="online-users" class="list-group mb-2"></ul>
+
+    <button id="enable-all" class="btn btn-sm btn-success mb-1">Enable All</button>
+    <button id="disable-all" class="btn btn-sm btn-danger mb-2">Disable All</button>
+
+    <hr>
+
+    <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
+      🌙 Night Mode
     </button>
-    {% endif %}
 
-    <hr class="border-secondary">
+    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">Logout</a>
 
-    <a href="/password_change/">🔑 Change Password</a>
-    <a href="{% url 'logout' %}">🚪 Logout</a>
   </div>
 
   <!-- CHAT -->
@@ -185,6 +231,7 @@ button.send {
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
   const roomName = "{{ room_name }}";
   const ws_scheme = location.protocol === "https:" ? "wss" : "ws";
   const chatSocket = new WebSocket(ws_scheme + '://' + location.host + '/ws/chat/' + roomName + '/');
@@ -194,94 +241,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputField = document.getElementById("chat-message-input");
   const currentUser = "{{ request.user.username }}";
 
-  /* --------------------------------------------------
-     USER MESSAGE FILTER SYSTEM
-     -------------------------------------------------- */
-
-  // Empty set => show all users
   let visibleUsers = new Set();
 
-  function reloadMessages() {
-    chatMessages.innerHTML = "";
-    const cached = JSON.parse(localStorage.getItem("chat_" + roomName) || "[]");
-    cached.forEach(m => appendMessage(m, false));
-  }
+  function appendMessage(data) {
+    if (data.user !== "System" && visibleUsers.size > 0 && !visibleUsers.has(data.user)) return;
 
-  /* --------------------------------------------------
-     CACHE FUNCTIONS
-     -------------------------------------------------- */
-  function loadCachedMessages() {
-    const cached = localStorage.getItem("chat_" + roomName);
-    if (!cached) return;
-    try {
-      const msgs = JSON.parse(cached);
-      msgs.forEach(data => appendMessage(data, false));
-    } catch (e) {}
-  }
-
-  function saveMessageToCache(data) {
-    const key = "chat_" + roomName;
-    let msgs = JSON.parse(localStorage.getItem(key) || "[]");
-    msgs.push(data);
-    if (msgs.length > 100) msgs = msgs.slice(-100);
-    localStorage.setItem(key, JSON.stringify(msgs));
-  }
-
-  /* --------------------------------------------------
-     APPEND MESSAGE WITH FILTERING
-     -------------------------------------------------- */
-  function appendMessage(data, animate = true) {
-
-    // FILTER: hide if disabled
-    if (data.user !== "System") {
-      if (visibleUsers.size > 0 && !visibleUsers.has(data.user)) {
-        return;
-      }
-    }
-
-    const msg = document.createElement("div");
-    const isMe = data.user.trim().toLowerCase() === currentUser.trim().toLowerCase();
-
-    if (data.user === "System") {
-      msg.className = "system";
-      msg.textContent = `${data.message} (${data.time || ''})`;
-    } else {
-      msg.className = isMe ? "message me" : "message other";
-
-      const textSpan = document.createElement("span");
-      textSpan.textContent = isMe ? data.message : `${data.user}:\n${data.message}`;
-
-      const timeSpan = document.createElement("span");
-      timeSpan.className = "message-time";
-      timeSpan.textContent = data.time || "";
-
-      msg.appendChild(textSpan);
-      msg.appendChild(timeSpan);
-    }
-
-    if (!animate) msg.style.animation = "none";
-
-    chatMessages.appendChild(msg);
+    const div = document.createElement("div");
+    div.className = "message " + (data.user === currentUser ? "me" : "other");
+    div.textContent = data.user === currentUser ? data.message : `${data.user}: ${data.message}`;
+    chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  /* Load cached messages */
-  loadCachedMessages();
-
-  /* --------------------------------------------------
-     HANDLE INCOMING WEBSOCKET MESSAGE
-     -------------------------------------------------- */
-  chatSocket.onmessage = function(e) {
+  chatSocket.onmessage = e => {
     const data = JSON.parse(e.data);
-    const now = new Date();
-    data.time = now.getHours().toString().padStart(2, '0') 
-                + ":" + now.getMinutes().toString().padStart(2, '0');
 
     if (data.type === "user_list") {
-      const onlineUsers = document.getElementById("online-users");
-      const onlineUsersTitle = document.getElementById("online-users-title");
-
-      onlineUsers.innerHTML = "";
+      const ul = document.getElementById("online-users");
+      const title = document.getElementById("online-users-title");
+      ul.innerHTML = "";
 
       data.users.forEach(u => {
         const li = document.createElement("li");
@@ -291,84 +269,60 @@ document.addEventListener("DOMContentLoaded", () => {
         span.textContent = u;
 
         const btn = document.createElement("button");
-        btn.className = "btn btn-sm";
-
-        let enabled = (visibleUsers.size === 0 || visibleUsers.has(u));
+        let enabled = visibleUsers.size === 0 || visibleUsers.has(u);
         btn.textContent = enabled ? "Disable" : "Enable";
-        btn.classList.add(enabled ? "btn-danger" : "btn-success");
+        btn.className = "btn btn-sm " + (enabled ? "btn-danger" : "btn-success");
 
-        btn.addEventListener("click", () => {
-          if (visibleUsers.size === 0) {
-            data.users.forEach(usr => visibleUsers.add(usr));
-          }
-
-          if (visibleUsers.has(u)) visibleUsers.delete(u);
-          else visibleUsers.add(u);
-
+        btn.onclick = () => {
+          if (visibleUsers.size === 0) data.users.forEach(x => visibleUsers.add(x));
+          visibleUsers.has(u) ? visibleUsers.delete(u) : visibleUsers.add(u);
           btn.textContent = visibleUsers.has(u) ? "Disable" : "Enable";
           btn.className = "btn btn-sm " + (visibleUsers.has(u) ? "btn-danger" : "btn-success");
+          chatMessages.innerHTML = "";
+        };
 
-          reloadMessages();
-        });
-
-        li.appendChild(span);
-        li.appendChild(btn);
-        onlineUsers.appendChild(li);
+        li.append(span, btn);
+        ul.appendChild(li);
       });
 
-      onlineUsersTitle.textContent = `Online Users (${data.users.length})`;
+      title.textContent = `Online Users (${data.users.length})`;
       return;
     }
 
-    appendMessage(data, true);
-    saveMessageToCache(data);
+    appendMessage(data);
   };
 
-  /* --------------------------------------------------
-     SEND USER MESSAGE
-     -------------------------------------------------- */
-  chatForm.addEventListener("submit", function(e) {
+  chatForm.onsubmit = e => {
     e.preventDefault();
     if (inputField.value.trim()) {
-      chatSocket.send(JSON.stringify({ "message": inputField.value }));
+      chatSocket.send(JSON.stringify({ message: inputField.value }));
       inputField.value = "";
     }
-  });
+  };
 
-  /* Leave room */
-  document.getElementById("leave-room-btn")?.addEventListener("click", () => {
-    chatSocket.close();
-    window.location.href = "/";
-  });
+  document.getElementById("enable-all").onclick = () => {
+    visibleUsers.clear();
+    chatMessages.innerHTML = "";
+  };
 
-  /* THEME TOGGLE */
+  document.getElementById("disable-all").onclick = () => {
+    visibleUsers.clear();
+    visibleUsers.add(currentUser);
+    chatMessages.innerHTML = "";
+  };
+
   const themeBtn = document.getElementById("toggle-theme-btn");
+  const saved = localStorage.getItem("theme") || "dark-mode";
+  document.body.className = saved;
+  themeBtn.textContent = saved === "dark-mode" ? "🌞 Light Mode" : "🌙 Night Mode";
 
-  document.body.className = localStorage.getItem("theme") || "dark-mode";
-  themeBtn.textContent = document.body.classList.contains("dark-mode") ? "🌞 Light Mode" : "🌙 Night Mode";
-
-  themeBtn.addEventListener("click", () => {
+  themeBtn.onclick = () => {
     document.body.classList.toggle("dark-mode");
     document.body.classList.toggle("light-mode");
     const dark = document.body.classList.contains("dark-mode");
     themeBtn.textContent = dark ? "🌞 Light Mode" : "🌙 Night Mode";
     localStorage.setItem("theme", dark ? "dark-mode" : "light-mode");
-  });
-
-
-  /* --------------------------------------------------
-     GLOBAL ENABLE / DISABLE ALL
-     -------------------------------------------------- */
-  document.getElementById("enable-all").addEventListener("click", () => {
-    visibleUsers.clear(); // empty => show everyone
-    reloadMessages();
-  });
-
-  document.getElementById("disable-all").addEventListener("click", () => {
-    visibleUsers.clear();
-    visibleUsers.add(currentUser); // Only self visible
-    reloadMessages();
-  });
+  };
 
 });
 </script>
