@@ -8,14 +8,14 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-/* ========== RESET ========== */
+/* ================= RESET ================= */
 html, body {
   height: 100%;
   margin: 0;
   font-family: system-ui, -apple-system;
 }
 
-/* ========== DARK MODE ========== */
+/* ================= DARK MODE ================= */
 body.dark-mode {
   background: #343541;
   color: #ececf1;
@@ -44,7 +44,7 @@ body.dark-mode .message.other {
   border-radius: 16px 16px 16px 4px;
 }
 
-/* ========== LIGHT MODE ========== */
+/* ================= LIGHT MODE ================= */
 body.light-mode {
   background: #f8f9fa;
   color: #212529;
@@ -66,7 +66,7 @@ body.light-mode .message.other {
   color: #212529;
 }
 
-/* ========== LAYOUT ========== */
+/* ================= LAYOUT ================= */
 .app {
   display: flex;
   height: 100vh;
@@ -109,7 +109,6 @@ body.light-mode .message.other {
 .message {
   padding: 12px 16px;
   max-width: 75%;
-  white-space: pre-wrap;
 }
 
 .message.me { align-self: flex-end; }
@@ -161,10 +160,16 @@ button.send {
   <div class="mb-2">{{ room_name }}</div>
 
   {% if request.user == room.created_by %}
-  <button id="lock-room-btn" class="btn btn-sm btn-warning mb-2">
+  <button id="lock-room-btn"
+          class="btn btn-sm btn-warning mb-2"
+          data-room="{{ room.name }}">
     {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
   </button>
   {% endif %}
+
+  <button id="leave-room-btn" class="btn btn-sm btn-outline-danger mb-2">
+    🚪 Leave Room
+  </button>
 
   <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
     🔑 Change Password
@@ -226,7 +231,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("chat-form");
   const currentUser = "{{ request.user.username }}";
 
-  let visibleUsers = new Set(); // empty = show all
+  let visibleUsers = new Set();
+  let currentOnlineUsers = [];
 
   function cacheMessage(data) {
     const key = "chat_" + roomName;
@@ -236,20 +242,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadCachedMessages() {
+    chatMessages.innerHTML = "";
     const cached = JSON.parse(localStorage.getItem("chat_" + roomName) || "[]");
     cached.forEach(renderMessage);
   }
 
   function renderMessage(data) {
-  
-    if (!data || !data.user || !data.message) return;
-  
-    if (
-      data.user !== "System" &&
-      visibleUsers.size > 0 &&
-      !visibleUsers.has(data.user)
-    ) return;
-
+    if (data.user !== "System" &&
+        visibleUsers.size > 0 &&
+        !visibleUsers.has(data.user)) return;
 
     const div = document.createElement("div");
 
@@ -277,35 +278,15 @@ document.addEventListener("DOMContentLoaded", () => {
   ws.onmessage = e => {
     const data = JSON.parse(e.data);
     const now = new Date();
-    const time =
+    data.time =
       now.getHours().toString().padStart(2, "0") + ":" +
       now.getMinutes().toString().padStart(2, "0");
-    
-    /* ================= SYSTEM MESSAGE ================= */
-    if (data.type === "system") {
-      const systemData = {
-        user: "System",
-        message: data.text,
-        time: time
-      };
-    
-      cacheMessage(systemData);
-      renderMessage(systemData);
-      return;
-    }
-    
-    /* ================= NORMAL CHAT MESSAGE ================= */
-    const chatData = {
-      user: data.user,
-      message: data.message,
-      time: time
-    };
-    
-    cacheMessage(chatData);
-    renderMessage(chatData);
 
+    cacheMessage(data);
+    renderMessage(data);
 
     if (data.type === "user_list") {
+      currentOnlineUsers = data.users;
       const ul = document.getElementById("online-users");
       const title = document.getElementById("online-users-title");
       ul.innerHTML = "";
@@ -323,9 +304,10 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.className = "btn btn-sm " + (enabled ? "btn-danger" : "btn-success");
 
         btn.onclick = () => {
-          if (visibleUsers.size === 0) data.users.forEach(x => visibleUsers.add(x));
+          if (visibleUsers.size === 0)
+            data.users.forEach(x => visibleUsers.add(x));
+
           visibleUsers.has(u) ? visibleUsers.delete(u) : visibleUsers.add(u);
-          chatMessages.innerHTML = "";
           loadCachedMessages();
         };
 
@@ -349,26 +331,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("enable-all").onclick = () => {
     visibleUsers.clear();
-    chatMessages.innerHTML = "";
     loadCachedMessages();
   };
 
   document.getElementById("disable-all").onclick = () => {
     visibleUsers.clear();
     visibleUsers.add(currentUser);
-    chatMessages.innerHTML = "";
     loadCachedMessages();
   };
+
+  document.getElementById("leave-room-btn").onclick = () => {
+    ws.close();
+    window.location.href = "/";
+  };
+
+  /* LOCK ROOM → SEND ONLINE USERS TO BACKEND */
+  document.getElementById("lock-room-btn")?.addEventListener("click", () => {
+    fetch(`/room/${roomName}/toggle-lock/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        allowed_users: currentOnlineUsers
+      })
+    }).then(() => location.reload());
+  });
 
   const themeBtn = document.getElementById("toggle-theme-btn");
   const saved = localStorage.getItem("theme") || "dark-mode";
   document.body.className = saved;
-  themeBtn.textContent = saved === "dark-mode" ? "🌞 Light Mode" : "🌙 Night Mode";
 
   themeBtn.onclick = () => {
     document.body.classList.toggle("dark-mode");
     document.body.classList.toggle("light-mode");
-    localStorage.setItem("theme",
+    localStorage.setItem(
+      "theme",
       document.body.classList.contains("dark-mode") ? "dark-mode" : "light-mode"
     );
   };
