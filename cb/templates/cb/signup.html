@@ -50,7 +50,11 @@
     <div class="mb-3 text-start">
       {{ field.label_tag }}
       {{ field }}
-      <div class="mb-3 text-start">
+      {% if field.errors %}
+        <div class="text-danger small">{{ field.errors }}</div>
+      {% endif %}
+    </div>
+    <div class="mb-3 text-start">
         <label for="email">Email</label>
         <input
           type="email"
@@ -60,10 +64,6 @@
           placeholder="Enter your email"
           required
         >
-      </div>
-      {% if field.errors %}
-        <div class="text-danger small">{{ field.errors }}</div>
-      {% endif %}
     </div>
   {% endfor %}
 
