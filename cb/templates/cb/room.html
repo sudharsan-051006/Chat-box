@@ -234,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let visibleUsers = new Set();
   let currentOnlineUsers = [];
 
+  /* ================= CACHE ================= */
   function cacheMessage(data) {
     const key = "chat_" + roomName;
     const msgs = JSON.parse(localStorage.getItem(key) || "[]");
@@ -247,15 +248,15 @@ document.addEventListener("DOMContentLoaded", () => {
     cached.forEach(renderMessage);
   }
 
+  /* ================= RENDER ================= */
   function renderMessage(data) {
     if (!data || !data.user || !data.message) return;
-  
+
     if (
       data.user !== "System" &&
       visibleUsers.size > 0 &&
       !visibleUsers.has(data.user)
     ) return;
-
 
     const div = document.createElement("div");
 
@@ -267,7 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
       div.className = "message " + (isMe ? "me" : "other");
 
       const text = document.createElement("div");
-      text.textContent = isMe ? data.message : `${data.user}: ${data.message}`;
+      text.textContent = isMe
+        ? data.message
+        : data.user + ": " + data.message;
 
       const time = document.createElement("div");
       time.className = "msg-time";
@@ -280,48 +283,36 @@ document.addEventListener("DOMContentLoaded", () => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-   ws.onmessage = (e) => {
+  /* ================= WEBSOCKET ================= */
+  ws.onmessage = function (e) {
     const raw = JSON.parse(e.data);
-  
+
     const now = new Date();
     const time =
       now.getHours().toString().padStart(2, "0") + ":" +
       now.getMinutes().toString().padStart(2, "0");
-  
-    /* ================= SYSTEM MESSAGE ================= */
+
+    /* SYSTEM MESSAGE */
     if (raw.type === "system") {
       const data = {
         user: "System",
         message: raw.text,
         time: time
       };
-  
-      cacheMessage(data);   // ✅ always cache
-      renderMessage(data);  // ✅ safe render
+      cacheMessage(data);
+      renderMessage(data);
       return;
     }
-  
-    /* ================= USER MESSAGE ================= */
-    if (raw.user && raw.message) {
-      const data = {
-        user: raw.user,
-        message: raw.message,
-        time: time
-      };
-  
-      cacheMessage(data);   // ✅ always cache
-      renderMessage(data);  // ✅ safe render
-    }
-  };
 
+    /* USER LIST */
+    if (raw.type === "user_list") {
+      currentOnlineUsers = raw.users;
 
-    if (data.type === "user_list") {
-      currentOnlineUsers = data.users;
       const ul = document.getElementById("online-users");
       const title = document.getElementById("online-users-title");
       ul.innerHTML = "";
 
-      data.users.forEach(u => {
+      raw.users.forEach(u => {
         const li = document.createElement("li");
         li.className = "list-group-item d-flex justify-content-between";
 
@@ -335,9 +326,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         btn.onclick = () => {
           if (visibleUsers.size === 0)
-            data.users.forEach(x => visibleUsers.add(x));
+            raw.users.forEach(x => visibleUsers.add(x));
 
-          visibleUsers.has(u) ? visibleUsers.delete(u) : visibleUsers.add(u);
+          visibleUsers.has(u)
+            ? visibleUsers.delete(u)
+            : visibleUsers.add(u);
+
           loadCachedMessages();
         };
 
@@ -345,12 +339,26 @@ document.addEventListener("DOMContentLoaded", () => {
         ul.appendChild(li);
       });
 
-      title.textContent = `Online Users (${data.users.length})`;
+      title.textContent = "Online Users (" + raw.users.length + ")";
+      return;
+    }
+
+    /* USER MESSAGE */
+    if (raw.user && raw.message) {
+      const data = {
+        user: raw.user,
+        message: raw.message,
+        time: time
+      };
+      cacheMessage(data);
+      renderMessage(data);
     }
   };
 
+  /* ================= INIT ================= */
   loadCachedMessages();
 
+  /* ================= SEND MESSAGE ================= */
   form.onsubmit = e => {
     e.preventDefault();
     if (input.value.trim()) {
@@ -359,6 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  /* ================= FILTER CONTROLS ================= */
   document.getElementById("enable-all").onclick = () => {
     visibleUsers.clear();
     loadCachedMessages();
@@ -370,14 +379,15 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCachedMessages();
   };
 
+  /* ================= LEAVE ROOM ================= */
   document.getElementById("leave-room-btn").onclick = () => {
     ws.close();
     window.location.href = "/";
   };
 
-  /* LOCK ROOM → SEND ONLINE USERS TO BACKEND */
+  /* ================= LOCK ROOM ================= */
   document.getElementById("lock-room-btn")?.addEventListener("click", () => {
-    fetch(`/room/${roomName}/toggle-lock/`, {
+    fetch("/room/" + roomName + "/toggle-lock/", {
       method: "POST",
       headers: {
         "X-CSRFToken": "{{ csrf_token }}",
@@ -389,6 +399,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }).then(() => location.reload());
   });
 
+  /* ================= THEME ================= */
   const themeBtn = document.getElementById("toggle-theme-btn");
   const saved = localStorage.getItem("theme") || "dark-mode";
   document.body.className = saved;
@@ -398,7 +409,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.toggle("light-mode");
     localStorage.setItem(
       "theme",
-      document.body.classList.contains("dark-mode") ? "dark-mode" : "light-mode"
+      document.body.classList.contains("dark-mode")
+        ? "dark-mode"
+        : "light-mode"
     );
   };
 
