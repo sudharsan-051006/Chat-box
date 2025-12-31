@@ -8,14 +8,14 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-/* ================= RESET ================= */
+/* ========== RESET ========== */
 html, body {
   height: 100%;
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  font-family: system-ui, -apple-system;
 }
 
-/* ================= DARK MODE ================= */
+/* ========== DARK MODE ========== */
 body.dark-mode {
   background: #343541;
   color: #ececf1;
@@ -44,57 +44,29 @@ body.dark-mode .message.other {
   border-radius: 16px 16px 16px 4px;
 }
 
-body.dark-mode textarea {
-  background: #40414f;
-  color: white;
-}
-
-body.dark-mode #online-users li {
-  background: #2f2f2f;
-  color: white;
-}
-
-/* ================= LIGHT MODE ================= */
+/* ========== LIGHT MODE ========== */
 body.light-mode {
   background: #f8f9fa;
   color: #212529;
 }
 
 body.light-mode .sidebar {
-  background: #ffffff;
+  background: white;
   border-right: 1px solid #ddd;
 }
 
 body.light-mode .chat-header,
 body.light-mode .chat-input {
-  background: #ffffff;
+  background: white;
   border-color: #ddd;
-}
-
-body.light-mode .message.me {
-  background: #0d6efd;
-  color: white;
-  border-radius: 16px 16px 4px 16px;
 }
 
 body.light-mode .message.other {
   background: #e9ecef;
   color: #212529;
-  border-radius: 16px 16px 16px 4px;
 }
 
-body.light-mode textarea {
-  background: #ffffff;
-  color: #212529;
-  border: 1px solid #ced4da;
-}
-
-body.light-mode #online-users li {
-  background: #f1f3f5;
-  color: #212529;
-}
-
-/* ================= LAYOUT ================= */
+/* ========== LAYOUT ========== */
 .app {
   display: flex;
   height: 100vh;
@@ -105,12 +77,6 @@ body.light-mode #online-users li {
   padding: 12px;
   display: flex;
   flex-direction: column;
-}
-
-.sidebar h6 {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  margin-bottom: 6px;
 }
 
 .chat {
@@ -144,28 +110,15 @@ body.light-mode #online-users li {
   padding: 12px 16px;
   max-width: 75%;
   white-space: pre-wrap;
-  word-break: break-word;
 }
 
-.message.me {
-  align-self: flex-end;
-}
-
-.message.other {
-  align-self: flex-start;
-}
+.message.me { align-self: flex-end; }
+.message.other { align-self: flex-start; }
 
 .msg-time {
   font-size: 0.7rem;
   opacity: 0.7;
   text-align: right;
-  margin-top: 4px;
-}
-
-.system {
-  text-align: center;
-  opacity: 0.7;
-  font-style: italic;
 }
 
 .chat-input {
@@ -182,18 +135,16 @@ body.light-mode #online-users li {
 
 textarea {
   resize: none;
-  border-radius: 6px;
   padding: 10px;
+  border-radius: 6px;
   flex: 1;
 }
 
-textarea:focus { outline: none; }
-
 button.send {
   background: #0d6efd;
+  color: white;
   border: none;
   border-radius: 6px;
-  color: white;
   padding: 0 20px;
 }
 </style>
@@ -203,106 +154,131 @@ button.send {
 
 <div class="app">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-    <h6>ROOM</h6>
-    <div class="mb-2">{{ room_name }}</div>
+  <h6>ROOM</h6>
+  <div class="mb-2">{{ room_name }}</div>
 
-    <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
-      🔑 Change Password
-    </a>
+  {% if request.user == room.created_by %}
+  <button id="lock-room-btn" class="btn btn-sm btn-warning mb-2">
+    {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
+  </button>
+  {% endif %}
 
-    <hr>
+  <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
+    🔑 Change Password
+  </a>
 
-    <h6 id="online-users-title">Online Users (0)</h6>
-    <ul id="online-users" class="list-group mb-2"></ul>
+  <hr>
 
-    <button id="enable-all" class="btn btn-sm btn-success mb-1">Enable All</button>
-    <button id="disable-all" class="btn btn-sm btn-danger mb-2">Disable All</button>
+  <h6 id="online-users-title">Online Users (0)</h6>
+  <ul id="online-users" class="list-group mb-2"></ul>
 
-    <hr>
+  <button id="enable-all" class="btn btn-sm btn-success mb-1">Enable All</button>
+  <button id="disable-all" class="btn btn-sm btn-danger mb-2">Disable All</button>
 
-    <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
-      🌙 Night Mode
-    </button>
+  <hr>
 
-    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">
-      🚪 Logout
-    </a>
+  <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
+    🌙 Night Mode
+  </button>
 
+  <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">
+    🚪 Logout
+  </a>
+
+</div>
+
+<!-- CHAT -->
+<div class="chat">
+
+  <div class="chat-header">
+    {{ room_name }} {% if room.is_locked %} 🔒 {% endif %}
   </div>
 
-  <!-- CHAT -->
-  <div class="chat">
-
-    <div class="chat-header">
-      {{ room_name }} {% if room.is_locked %} 🔒 {% endif %}
-    </div>
-
-    <div class="chat-body">
-      <div id="chat-messages" class="chat-container"></div>
-    </div>
-
-    <div class="chat-input">
-      <form id="chat-form">
-        {% csrf_token %}
-        <textarea id="chat-message-input" rows="1" placeholder="Send a message..."></textarea>
-        <button class="send" type="submit">Send</button>
-      </form>
-    </div>
-
+  <div class="chat-body">
+    <div id="chat-messages" class="chat-container"></div>
   </div>
+
+  <div class="chat-input">
+    <form id="chat-form">
+      {% csrf_token %}
+      <textarea id="chat-message-input" rows="1" placeholder="Send a message..."></textarea>
+      <button class="send">Send</button>
+    </form>
+  </div>
+
+</div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
   const roomName = "{{ room_name }}";
-  const ws_scheme = location.protocol === "https:" ? "wss" : "ws";
-  const chatSocket = new WebSocket(ws_scheme + "://" + location.host + "/ws/chat/" + roomName + "/");
+  const ws = new WebSocket(
+    (location.protocol === "https:" ? "wss" : "ws") +
+    "://" + location.host + "/ws/chat/" + roomName + "/"
+  );
 
   const chatMessages = document.getElementById("chat-messages");
-  const chatForm = document.getElementById("chat-form");
-  const inputField = document.getElementById("chat-message-input");
+  const input = document.getElementById("chat-message-input");
+  const form = document.getElementById("chat-form");
   const currentUser = "{{ request.user.username }}";
 
-  let visibleUsers = new Set();
+  let visibleUsers = new Set(); // empty = show all
 
-  function appendMessage(data) {
-    if (data.user !== "System" && visibleUsers.size > 0 && !visibleUsers.has(data.user)) return;
+  function cacheMessage(data) {
+    const key = "chat_" + roomName;
+    const msgs = JSON.parse(localStorage.getItem(key) || "[]");
+    msgs.push(data);
+    localStorage.setItem(key, JSON.stringify(msgs.slice(-200)));
+  }
 
-    const msg = document.createElement("div");
+  function loadCachedMessages() {
+    const cached = JSON.parse(localStorage.getItem("chat_" + roomName) || "[]");
+    cached.forEach(renderMessage);
+  }
+
+  function renderMessage(data) {
+    if (
+      data.user !== "System" &&
+      visibleUsers.size > 0 &&
+      !visibleUsers.has(data.user)
+    ) return;
+
+    const div = document.createElement("div");
 
     if (data.user === "System") {
-      msg.className = "system";
-      msg.textContent = data.message;
+      div.className = "system";
+      div.textContent = data.message;
     } else {
       const isMe = data.user === currentUser;
-      msg.className = "message " + (isMe ? "me" : "other");
+      div.className = "message " + (isMe ? "me" : "other");
 
       const text = document.createElement("div");
       text.textContent = isMe ? data.message : `${data.user}: ${data.message}`;
 
       const time = document.createElement("div");
       time.className = "msg-time";
-      time.textContent = data.time || "";
+      time.textContent = data.time;
 
-      msg.appendChild(text);
-      msg.appendChild(time);
+      div.append(text, time);
     }
 
-    chatMessages.appendChild(msg);
+    chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  chatSocket.onmessage = e => {
+  ws.onmessage = e => {
     const data = JSON.parse(e.data);
-
     const now = new Date();
     data.time =
       now.getHours().toString().padStart(2, "0") + ":" +
       now.getMinutes().toString().padStart(2, "0");
+
+    cacheMessage(data);       // ✅ ALWAYS CACHE
+    renderMessage(data);      // 👀 VISIBILITY CHECK HERE
 
     if (data.type === "user_list") {
       const ul = document.getElementById("online-users");
@@ -311,13 +287,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       data.users.forEach(u => {
         const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.className = "list-group-item d-flex justify-content-between";
 
-        const span = document.createElement("span");
-        span.textContent = u;
+        const name = document.createElement("span");
+        name.textContent = u;
 
         const btn = document.createElement("button");
-        let enabled = visibleUsers.size === 0 || visibleUsers.has(u);
+        const enabled = visibleUsers.size === 0 || visibleUsers.has(u);
         btn.textContent = enabled ? "Disable" : "Enable";
         btn.className = "btn btn-sm " + (enabled ? "btn-danger" : "btn-success");
 
@@ -325,49 +301,51 @@ document.addEventListener("DOMContentLoaded", () => {
           if (visibleUsers.size === 0) data.users.forEach(x => visibleUsers.add(x));
           visibleUsers.has(u) ? visibleUsers.delete(u) : visibleUsers.add(u);
           chatMessages.innerHTML = "";
+          loadCachedMessages();
         };
 
-        li.append(span, btn);
+        li.append(name, btn);
         ul.appendChild(li);
       });
 
       title.textContent = `Online Users (${data.users.length})`;
-      return;
     }
-
-    appendMessage(data);
   };
 
-  chatForm.onsubmit = e => {
+  loadCachedMessages();
+
+  form.onsubmit = e => {
     e.preventDefault();
-    if (inputField.value.trim()) {
-      chatSocket.send(JSON.stringify({ message: inputField.value }));
-      inputField.value = "";
+    if (input.value.trim()) {
+      ws.send(JSON.stringify({ message: input.value }));
+      input.value = "";
     }
   };
 
   document.getElementById("enable-all").onclick = () => {
     visibleUsers.clear();
     chatMessages.innerHTML = "";
+    loadCachedMessages();
   };
 
   document.getElementById("disable-all").onclick = () => {
     visibleUsers.clear();
     visibleUsers.add(currentUser);
     chatMessages.innerHTML = "";
+    loadCachedMessages();
   };
 
   const themeBtn = document.getElementById("toggle-theme-btn");
-  const savedTheme = localStorage.getItem("theme") || "dark-mode";
-  document.body.className = savedTheme;
-  themeBtn.textContent = savedTheme === "dark-mode" ? "🌞 Light Mode" : "🌙 Night Mode";
+  const saved = localStorage.getItem("theme") || "dark-mode";
+  document.body.className = saved;
+  themeBtn.textContent = saved === "dark-mode" ? "🌞 Light Mode" : "🌙 Night Mode";
 
   themeBtn.onclick = () => {
     document.body.classList.toggle("dark-mode");
     document.body.classList.toggle("light-mode");
-    const dark = document.body.classList.contains("dark-mode");
-    themeBtn.textContent = dark ? "🌞 Light Mode" : "🌙 Night Mode";
-    localStorage.setItem("theme", dark ? "dark-mode" : "light-mode");
+    localStorage.setItem("theme",
+      document.body.classList.contains("dark-mode") ? "dark-mode" : "light-mode"
+    );
   };
 
 });
