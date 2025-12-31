@@ -241,11 +241,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderMessage(data) {
+  
+    if (!data || !data.user || !data.message) return;
+  
     if (
       data.user !== "System" &&
       visibleUsers.size > 0 &&
       !visibleUsers.has(data.user)
     ) return;
+
 
     const div = document.createElement("div");
 
@@ -273,12 +277,33 @@ document.addEventListener("DOMContentLoaded", () => {
   ws.onmessage = e => {
     const data = JSON.parse(e.data);
     const now = new Date();
-    data.time =
+    const time =
       now.getHours().toString().padStart(2, "0") + ":" +
       now.getMinutes().toString().padStart(2, "0");
+    
+    /* ================= SYSTEM MESSAGE ================= */
+    if (data.type === "system") {
+      const systemData = {
+        user: "System",
+        message: data.text,
+        time: time
+      };
+    
+      cacheMessage(systemData);
+      renderMessage(systemData);
+      return;
+    }
+    
+    /* ================= NORMAL CHAT MESSAGE ================= */
+    const chatData = {
+      user: data.user,
+      message: data.message,
+      time: time
+    };
+    
+    cacheMessage(chatData);
+    renderMessage(chatData);
 
-    cacheMessage(data);       // ✅ ALWAYS CACHE
-    renderMessage(data);      // 👀 VISIBILITY CHECK HERE
 
     if (data.type === "user_list") {
       const ul = document.getElementById("online-users");
