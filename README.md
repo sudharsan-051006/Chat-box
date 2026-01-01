@@ -26,6 +26,6 @@ The app is deployed on Railway.
 - Deployment: Railway
 
 ---
+## Live Demo
 
-## Setup (Local Development)
-1. Clone the repository:
+- https://chat-box-p0m8.onrender.com
