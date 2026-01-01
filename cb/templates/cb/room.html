@@ -260,11 +260,7 @@ button.send:active {
     {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
   </button>
   {% endif %}
-  
-  <button id="menu-btn"
-          class="btn btn-sm btn-outline-secondary d-md-none">
-    ☰
-  </button>
+
   <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
     🔑 Change Password
   </a>
@@ -306,8 +302,14 @@ button.send:active {
 <div class="chat">
 
   <div class="chat-header">
+    <button id="menu-btn"
+            class="btn btn-sm btn-outline-secondary d-md-none">
+      ☰
+    </button>
+  
     {{ room_name }} {% if room.is_locked %} 🔒 {% endif %}
   </div>
+
 
   <div class="chat-body">
     <div id="chat-messages" class="chat-container"></div>
