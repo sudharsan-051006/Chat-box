@@ -146,7 +146,9 @@ body.light-mode .message.other {
   flex: 1;
   overflow-y: auto;
   padding: 16px 0;
+  padding-bottom: 80px; /* space for input bar */
 }
+
 
 /* MESSAGE CONTAINER */
 .chat-container {
@@ -200,13 +202,18 @@ body.light-mode .message.other {
 
 /* ================= INPUT BAR ================= */
 .chat-input {
-  padding: 10px;
-  border-top: 1px solid;
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
+
+  padding: 10px;
+  border-top: 1px solid #444;
+  background: inherit;
+  z-index: 100;
 }
 
-/* INPUT FORM */
+/* Center input on desktop */
 .chat-input form {
   max-width: 760px;
   margin: auto;
@@ -222,6 +229,7 @@ textarea {
   border-radius: 6px;
   font-size: 16px; /* prevents mobile zoom */
   border: none;
+  resize:none;
 }
 
 textarea:focus {
