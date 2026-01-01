@@ -558,9 +558,21 @@ document.addEventListener("DOMContentLoaded", () => {
 const menuBtn = document.getElementById("menu-btn");
 const sidebar = document.querySelector(".sidebar");
 
-menuBtn?.addEventListener("click", () => {
+menuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
   sidebar.classList.toggle("show");
 });
+
+sidebar.addEventListener("click", e => {
+  e.stopPropagation();
+});
+
+document.addEventListener("click", () => {
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove("show");
+  }
+});
+
 
 </script>
 
