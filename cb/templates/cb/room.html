@@ -200,6 +200,15 @@ button.send {
     🔑 Change Password
   </a>
 
+  <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
+    🌙 Night Mode
+  </button>
+
+  <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">
+    🚪 Logout
+  </a>
+
+
   <hr>
 
   <h6 id="online-users-title">Online Users (0)</h6>
@@ -209,15 +218,6 @@ button.send {
   <button id="disable-all" class="btn btn-sm btn-danger mb-2">Disable All</button>
 
   <hr>
-
-  <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
-    🌙 Night Mode
-  </button>
-
-  <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">
-    🚪 Logout
-  </a>
-
 </div>
 
 <!-- CHAT -->
