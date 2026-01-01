@@ -9,120 +9,163 @@
 
 <style>
 /* ================= RESET ================= */
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   height: 100%;
   margin: 0;
-  font-family: system-ui, -apple-system;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ================= THEME VARIABLES ================= */
+:root {
+  --dark-bg: #343541;
+  --dark-sidebar: #202123;
+  --dark-border: #444;
+  --dark-text: #ececf1;
+
+  --light-bg: #f8f9fa;
+  --light-border: #ddd;
+  --light-text: #212529;
+
+  --primary: #0d6efd;
+  --bubble-other: #444654;
+  --bubble-me-light: #dcf8c6;
 }
 
 /* ================= DARK MODE ================= */
 body.dark-mode {
-  background: #343541;
-  color: #ececf1;
+  background: var(--dark-bg);
+  color: var(--dark-text);
 }
 
 body.dark-mode .sidebar {
-  background: #202123;
-  border-right: 1px solid #444;
+  background: var(--dark-sidebar);
+  border-right: 1px solid var(--dark-border);
 }
 
 body.dark-mode .chat-header,
 body.dark-mode .chat-input {
-  background: #343541;
-  border-color: #444;
+  background: var(--dark-bg);
+  border-color: var(--dark-border);
 }
 
-/* MY MESSAGE (LEFT) */
 body.dark-mode .message.me {
-  background: #0d6efd;
-  color: white;
+  background: var(--primary);
+  color: #fff;
   border-radius: 6px 16px 16px 16px;
 }
 
-/* OTHER USERS (RIGHT) */
 body.dark-mode .message.other {
-  background: #444654;
-  color: #ececf1;
+  background: var(--bubble-other);
+  color: var(--dark-text);
   border-radius: 16px 6px 16px 16px;
 }
 
 /* ================= LIGHT MODE ================= */
 body.light-mode {
-  background: #f8f9fa;
-  color: #212529;
+  background: var(--light-bg);
+  color: var(--light-text);
 }
 
 body.light-mode .sidebar {
-  background: white;
-  border-right: 1px solid #ddd;
+  background: #fff;
+  border-right: 1px solid var(--light-border);
 }
 
 body.light-mode .chat-header,
 body.light-mode .chat-input {
-  background: white;
-  border-color: #ddd;
+  background: #fff;
+  border-color: var(--light-border);
 }
 
 body.light-mode .message.me {
-  background: #dcf8c6;
+  background: var(--bubble-me-light);
   color: #000;
 }
 
 body.light-mode .message.other {
-  background: #ffffff;
+  background: #fff;
   color: #000;
 }
 
-/* ================= LAYOUT ================= */
+/* ================= APP LAYOUT ================= */
 .app {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
+/* ================= SIDEBAR ================= */
 .sidebar {
   width: 260px;
   padding: 12px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
+/* MOBILE SIDEBAR (OVERLAY) */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.show {
+    left: 0;
+  }
+}
+
+/* ================= CHAT AREA ================= */
 .chat {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
+/* ================= HEADER ================= */
 .chat-header {
   padding: 12px 16px;
   font-weight: 600;
   border-bottom: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
+/* ================= CHAT BODY ================= */
 .chat-body {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 0;
+  padding: 16px 0;
 }
 
-/* 🔥 MOST IMPORTANT FIX */
+/* MESSAGE CONTAINER */
 .chat-container {
   max-width: 760px;
   margin: auto;
   padding: 0 16px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;   /* 🔥 REQUIRED */
+  align-items: flex-start;
   gap: 14px;
 }
 
-/* 🔥 MOST IMPORTANT FIX */
+/* ================= MESSAGES ================= */
 .message {
-  padding: 12px 16px;
-  width: fit-content;        /* 🔥 REQUIRED */
+  padding: 10px 14px;
+  width: fit-content;
   max-width: 75%;
+  word-wrap: break-word;
 }
 
-/* WHATSAPP STYLE ALIGNMENT */
 .message.me {
   align-self: flex-end;
 }
@@ -131,6 +174,15 @@ body.light-mode .message.other {
   align-self: flex-start;
 }
 
+/* MOBILE MESSAGE WIDTH */
+@media (max-width: 768px) {
+  .message {
+    max-width: 90%;
+    font-size: 0.95rem;
+  }
+}
+
+/* MESSAGE TIME */
 .msg-time {
   font-size: 0.7rem;
   opacity: 0.7;
@@ -138,38 +190,56 @@ body.light-mode .message.other {
   margin-top: 4px;
 }
 
+/* SYSTEM MESSAGE */
 .system {
   align-self: center;
   opacity: 0.7;
   font-style: italic;
 }
 
-/* INPUT */
+/* ================= INPUT BAR ================= */
 .chat-input {
-  padding: 16px;
+  padding: 10px;
   border-top: 1px solid;
+  position: sticky;
+  bottom: 0;
 }
 
+/* INPUT FORM */
 .chat-input form {
   max-width: 760px;
   margin: auto;
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
+/* TEXTAREA */
 textarea {
+  flex: 1;
   resize: none;
   padding: 10px;
   border-radius: 6px;
-  flex: 1;
+  font-size: 16px; /* prevents mobile zoom */
+  border: none;
 }
 
+textarea:focus {
+  outline: none;
+}
+
+/* SEND BUTTON */
 button.send {
-  background: #0d6efd;
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0 20px;
+  padding: 0 18px;
+  min-height: 44px; /* touch-friendly */
+  cursor: pointer;
+}
+
+button.send:active {
+  transform: scale(0.97);
 }
 </style>
 </head>
