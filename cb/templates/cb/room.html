@@ -192,17 +192,27 @@ button.send {
   </button>
   {% endif %}
 
-  <button id="leave-room-btn" class="btn btn-sm btn-outline-danger mb-2">
-    🚪 Leave Room
-  </button>
 
   <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
     🔑 Change Password
   </a>
 
+  <button id="clear-cache-btn" class="btn btn-sm btn-outline-warning mb-2">
+    <i class="fa fa-trash" aria-hidden="true">Clear Chat</i>
+  </button>
+
+  
   <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
     🌙 Night Mode
   </button>
+
+
+  <hr>
+  
+  <button id="leave-room-btn" class="btn btn-sm btn-outline-danger mb-2">
+    🚪 Leave Room
+  </button>
+
 
   <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">
     🚪 Logout
@@ -310,6 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
 
 
   /* ================= WEBSOCKET ================= */
@@ -428,6 +439,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }).then(() => location.reload());
   });
 
+
+  document.getElementById("clear-cache-btn").onclick = () => {
+  const key = "chat_" + roomName;
+
+  // Remove only this room's cache
+  localStorage.removeItem(key);
+
+  // Clear UI
+  chatMessages.innerHTML = "";
+
+  // Optional: show system message
+  const now = new Date();
+  const time =
+    now.getHours().toString().padStart(2, "0") + ":" +
+    now.getMinutes().toString().padStart(2, "0");
+
+  renderMessage({
+    user: "System",
+    message: "🧹 Chat history cleared (local)",
+    time: time
+  });
+};
+
+  
   /* ================= THEME ================= */
   const themeBtn = document.getElementById("toggle-theme-btn");
   const saved = localStorage.getItem("theme") || "dark-mode";
