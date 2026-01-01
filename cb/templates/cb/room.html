@@ -553,6 +553,14 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 });
+
+const menuBtn = document.getElementById("menu-btn");
+const sidebar = document.querySelector(".sidebar");
+
+menuBtn?.addEventListener("click", () => {
+  sidebar.classList.toggle("show");
+});
+
 </script>
 
 </body>
