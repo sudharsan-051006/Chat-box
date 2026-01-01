@@ -250,10 +250,6 @@ button.send:active {
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-<button id="menu-btn"
-        class="btn btn-sm btn-outline-secondary d-md-none">
-  ☰
-</button>
   <h6>ROOM</h6>
   <div class="mb-2">{{ room_name }}</div>
 
@@ -264,8 +260,11 @@ button.send:active {
     {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
   </button>
   {% endif %}
-
-
+  
+  <button id="menu-btn"
+          class="btn btn-sm btn-outline-secondary d-md-none">
+    ☰
+  </button>
   <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
     🔑 Change Password
   </a>
