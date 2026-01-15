@@ -8,26 +8,32 @@
 
   <!-- Bootstrap & Font Awesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-/>
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
 
   <style>
-    /* General Layout */
     body {
-      background-image: url("{% static 'images/wall.jpg' %}");
+      background: radial-gradient(circle at top, #0b1220 0%, #020617 70%);
       color: #ffffff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      background-repeat: no-repeat;     /* ✅ Prevents image from repeating */
-      background-size: cover;           /* ✅ Enlarges image to fill entire screen */
-      background-position: center;      /* ✅ Keeps image centered */
-      background-attachment: fixed; 
+      overflow-x: hidden;
+    }
+
+    /* Background animation canvas */
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    main, footer {
+      position: relative;
+      z-index: 1;
     }
 
     main {
@@ -38,7 +44,6 @@
       padding: 1rem;
     }
 
-    /* Card Styling */
     .card {
       background: black;
       border: 1px solid #2c2c2c;
@@ -50,10 +55,6 @@
       position: relative;
     }
 
-    .card:hover{
-      background-image: linear-gradient(to right, white, black);
-    }
-
     .card h2 {
       font-weight: 600;
       margin-bottom: 1.5rem;
@@ -61,24 +62,15 @@
       text-align: center;
     }
 
-    /* Buttons and Form */
     .form-control {
       background-color: white;
       border: none;
-      color: #fff;
       box-shadow: 0 6px 20px black;
-    }
-
-    .form-control:focus {
-      background-image: linear-gradient(to right, white, black);
-      color: #fff;
-      box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25);
     }
 
     .btn-primary {
       background-color: #0dcaf0;
       border: none;
-      transition: background 0.3s ease;
       font-weight: 500;
     }
 
@@ -86,29 +78,6 @@
       background-color: #0bb5d4;
     }
 
-    /* Dropdown Menu */
-    .dropdown button {
-      border: none;
-      background: transparent;
-      color: #0dcaf0;
-    }
-
-    .dropdown-menu {
-      background-color: #1f1f1f;
-      border: 1px solid #333;
-      border-radius: 8px;
-    }
-    .dropdown-item {
-      color: #e0e0e0;
-      transition: 0.2s;
-    }
-
-    .dropdown-item:hover {
-      background-image: linear-gradient(to right, white, black);
-      color: #0dcaf0;
-    }
-
-    /* Room Links */
     .room-link {
       background: #2b2b2b;
       color: #0dcaf0;
@@ -118,250 +87,132 @@
       display: block;
       text-align: center;
       margin-top: 10px;
-      transition: all 0.3s ease;
     }
 
-    .room-link:hover {
-      background: #343a40;
-      color: #fff;
-    }
-
-    hr {
-      border-color: #333;
-    }
-
-    /* Offcanvas */
-    .offcanvas {
-      background-image: linear-gradient(to bottom,  white,black);
-      color: #fff;
-    }
-
-    .offcanvas-title {
-      color: #0dcaf0;
-      font-weight: 600;
-    }
-
-    .user-item {
-      background: #2b2b2b;
-      border-radius: 8px;
-      padding: 10px 15px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-status {
-      width: 8px;
-      height: 8px;
-      background-color: #28a745;
-      border-radius: 50%;
-    }
-
-
-    #page-loader {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.97);
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: #0dcaf0;
-  font-size: 1.1rem;
-  transition: opacity 0.4s ease;
-}
-
-#page-loader.hide {
-  opacity: 0;
-  pointer-events: none;
-}
-
-
-    /* Footer */
     footer {
       background-color: black;
       color: #ddd;
-      padding: 2rem 0 1rem 0;
+      padding: 2rem 0 1rem;
       border-top: 1px solid #2c2c2c;
       text-align: center;
-    }
-
-    footer h6 {
-      color: #0dcaf0;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    footer p {
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-    }
-
-    footer .social-icon {
-      font-size: 1.4rem;
-      color: #0dcaf0;
-      margin: 0 8px;
-      transition: 0.3s;
-    }
-
-    footer .social-icon:hover {
-      color: #fff;
-    }
-
-    footer small {
-      color: #888;
-      display: block;
-      margin-top: 1rem;
-    }
-
-    @media (max-width: 576px) {
-      .card {
-        padding: 1.5rem;
-      }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Main Content -->
-  <main>
+<!-- Subtle animated background -->
+<canvas id="bg"></canvas>
 
-<div id="page-loader">
-  <div class="spinner-border text-info" role="status"></div>
-  <p class="mt-3">Loading Chat Rooms...</p>
-</div>
-    <div class="card">
+<main>
 
-      <!-- Settings Dropdown -->
-      <div class="dropdown position-absolute" style="top: 15px; right: 15px;color:white">
-        <button class="btn btn-sm dropdown-toggle text-info" type="button" id="settingsDropdown"
-                data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fa-solid fa-gear"></i> Settings
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="/password_change/"><i class="fa-solid fa-key me-2"></i>Change Password</a></li>
-          <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
-        </ul>
-      </div>
+  <div class="card">
 
-      <h2><i class="fa-solid fa-comments me-2"></i>Chat Rooms</h2>
+    <!-- Account Dropdown -->
+    <div class="dropdown position-absolute" style="top: 15px; right: 15px; z-index: 2;">
+      <button class="btn btn-sm dropdown-toggle text-info"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        <i class="fa-solid fa-user-gear me-1"></i> Account
+      </button>
 
-      <!-- Create Room Form -->
-      <form method="POST" action="{% url 'create_room' %}">
-        {% csrf_token %}
-        <div class="mb-3">
-          <input type="text" name="room_name" class="form-control" placeholder="Enter new room name" style="color:white" required>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">
-          <i class="fa-solid fa-plus me-2"></i>Create Room
-        </button>
-      </form>
-
-      <hr class="my-4">
-
-      <!-- Existing Rooms -->
-      <h5 class="text-info text-center mb-3">Available Rooms</h5>
-      {% if rooms %}
-        {% for room in rooms %}
-          <a href="{% url 'room' room.name %}" class="room-link">
-            <i class="fa-solid fa-door-open me-2"></i>{{ room.name }}
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="/password_change/">
+            <i class="fa-solid fa-key me-2"></i>Change Password
           </a>
-        {% endfor %}
-      {% else %}
-        <p class="text-muted text-center mt-2" style="color:white"><i class="fa-solid fa-circle-info me-2"></i>No rooms created yet.</p>
-      {% endif %}
+        </li>
+        <li>
+          <a class="dropdown-item" href="{% url 'logout' %}">
+            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+          </a>
+        </li>
+      </ul>
     </div>
-  </main>
 
-  <!-- Offcanvas for Online Users -->
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasUsers">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title"><i class="fa-solid fa-users me-2"></i>Online Users</h5>
-      <button type="button" class="btn-close btn-close-black" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body">
-      <hr>
-      <p class="text-muted small text-center ">Online users will appear here</p>
-    </div>
-  </div>
+    <h2><i class="fa-solid fa-comments me-2"></i>Chat Rooms</h2>
 
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="row text-center justify-content-center">
-        <div class="col-md-3 mb-3">
-          <h6>Company</h6>
-          <p>About Us<br>Privacy Policy<br>Services</p>
-        </div>
-        <div class="col-md-3 mb-3">
-          <h6>Support</h6>
-          <p>Help Center<br>Contact<br>Returns</p>
-        </div>
+    <!-- Create Room -->
+    <form method="POST" action="{% url 'create_room' %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <input type="text" name="room_name" class="form-control"
+               placeholder="Enter new room name" required>
       </div>
-      <small>© 2025 Chat Room. All Rights Reserved.</small>
-    </div>
-  </footer>
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fa-solid fa-plus me-2"></i>Create Room
+      </button>
+    </form>
 
-  <!-- Bootstrap JS -->
-  <script>
-// ✅ Automatically choose ws:// or wss:// based on HTTPS
-const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    <hr class="my-4">
 
-const chatSocket = new WebSocket(
-    `${protocol}://${window.location.host}/ws/chat/${roomName}/`
-);
+    <!-- Existing Rooms -->
+    <h5 class="text-info text-center mb-3">Available Rooms</h5>
 
+    {% if rooms %}
+      {% for room in rooms %}
+        <a href="{% url 'room' room.name %}" class="room-link">
+          <i class="fa-solid fa-door-open me-2"></i>{{ room.name }}
+        </a>
+      {% endfor %}
+    {% else %}
+      <p class="text-center text-muted">No rooms created yet.</p>
+    {% endif %}
 
-const onlineUsers = document.getElementById("online-users");
-const onlineUsersTitle = document.getElementById("online-users-title");
+  </div>
+</main>
 
-chatSocket.onmessage = function (e) {
-  const data = JSON.parse(e.data);
+<footer>
+  <small>© 2025 Chat Room. All Rights Reserved.</small>
+</footer>
 
-  if (data.type === "user_list") {
-    onlineUsers.innerHTML = "";
-    data.users.forEach(u => {
-      let li = document.createElement("li");
-      li.classList.add("list-group-item");
-      li.textContent = u;
-      onlineUsers.appendChild(li);
-    });
-    onlineUsersTitle.textContent = `Online Users (${data.users.length})`;
+<!-- Background Animation Script -->
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let t = 0;
+
+function drawWave(angle) {
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(angle);
+  ctx.beginPath();
+
+  const scale = Math.min(canvas.width, canvas.height) / 4;
+
+  for (let x = -2; x <= 2; x += 0.04) {
+    const y = Math.sin(x * 2 - t) * 0.35;
+    ctx.lineTo(x * scale, y * scale);
   }
-};
 
-  // Hide loader AFTER page is usable
-  window.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-      loader.classList.add("hide");
-      sessionStorage.setItem("visited_chat_rooms", "true");
-    }, 3000);
-  });
-    console.log("First visit:", firstVisit);
-    console.log("Slow network:", slowNet);
-  </script>
-  <!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  ctx.strokeStyle = "rgba(148,163,184,0.15)";
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.restore();
+}
 
-  <script>
-  const loader = document.getElementById("page-loader");
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawWave(0);
+  drawWave(Math.PI / 2);
+  t += 0.003;
+  requestAnimationFrame(animate);
+}
 
-  // Safety: minimum display time (prevents flash)
-  const MIN_LOADER_TIME = 800;
-  const startTime = Date.now();
-
-  window.addEventListener("load", () => {
-    const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, MIN_LOADER_TIME - elapsed);
-
-    setTimeout(() => {
-      loader.classList.add("hide");
-    }, remaining);
-  });
+animate();
 </script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
