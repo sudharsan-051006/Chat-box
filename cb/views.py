@@ -52,11 +52,15 @@ class CustomLoginView(LoginView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        user_answer = request.POST.get("captcha")
+        user_answer = request.POST.get("captcha_answer")
         correct_answer = request.session.get("captcha_answer")
 
-        if not user_answer or int(user_answer) != correct_answer:
+        try:
+            if int(user_answer) != correct_answer:
+                raise ValueError
+        except (TypeError, ValueError):
             messages.error(request, "Invalid captcha")
+            request.session['captcha_question'] = generate_captcha(request)
             return redirect("login")
 
         return super().post(request, *args, **kwargs)
