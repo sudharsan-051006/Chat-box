@@ -127,26 +127,47 @@
 
 <div class="card">
 
-  <form method="post" action="{% url 'signup' %}">
-    {% csrf_token %}
+<form method="post" action="{% url 'signup' %}">
+  {% csrf_token %}
 
-    {% for field in form %}
-      <div class="mb-3">
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.errors %}
-          <div class="text-danger small">{{ field.errors }}</div>
-        {% endif %}
-      </div>
-    {% endfor %}
+  <!-- Username -->
+  <div class="mb-3">
+    <label for="id_username">Username</label>
+    {{ form.username }}
+    {% if form.username.errors %}
+      <div class="text-danger small">{{ form.username.errors }}</div>
+    {% endif %}
+  </div>
 
-    <div class="mb-3">
-      <label>Email</label>
-      <input type="email" name="email" class="form-control" required>
-    </div>
+  <!-- Email -->
+  <div class="mb-3">
+    <label for="id_email">Email</label>
+    {{ form.email }}
+    {% if form.email.errors %}
+      <div class="text-danger small">{{ form.email.errors }}</div>
+    {% endif %}
+  </div>
 
-    <button type="submit" class="btn-custom">Sign Up</button>
-  </form>
+  <!-- Password -->
+  <div class="mb-3">
+    <label for="id_password1">Password</label>
+    {{ form.password1 }}
+    {% if form.password1.errors %}
+      <div class="text-danger small">{{ form.password1.errors }}</div>
+    {% endif %}
+  </div>
+
+  <!-- Confirm Password -->
+  <div class="mb-3">
+    <label for="id_password2">Confirm Password</label>
+    {{ form.password2 }}
+    {% if form.password2.errors %}
+      <div class="text-danger small">{{ form.password2.errors }}</div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn-custom">Sign Up</button>
+</form>
 
   <div class="signup-link">
     Already have an account?
