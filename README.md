@@ -3,7 +3,7 @@
 ## Overview
 ChatBox is a real-time chat application built using Django, Django Channels, WebSockets, and PostgreSQL. Users can log in, join chat rooms, and see other online users. Admins can manage users via the Django admin panel.
 
-The app is deployed on Railway.
+The app is deployed on Render.
 
 ---
 
@@ -27,5 +27,5 @@ The app is deployed on Railway.
 
 ---
 ## Live Demo
-
+https://chat-box-p0m8.onrender.com/
 - https://chat-box-p0m8.onrender.com
