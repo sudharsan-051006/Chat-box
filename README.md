@@ -27,5 +27,4 @@ The app is deployed on Render.
 
 ---
 ## Live Demo
-https://chat-box-p0m8.onrender.com/
 - https://chat-box-p0m8.onrender.com
