@@ -483,12 +483,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ================= SEND MESSAGE ================= */
   form.onsubmit = e => {
-    e.preventDefault();
-    if (input.value.trim()) {
-      ws.send(JSON.stringify({ message: input.value }));
-      input.value = "";
-    }
-  };
+  e.preventDefault();
+
+  if (ws.readyState !== WebSocket.OPEN) {
+    alert("Connecting… please try again");
+    return;
+  }
+
+  if (input.value.trim()) {
+    ws.send(JSON.stringify({ message: input.value }));
+    input.value = "";
+  }
+};
+
 
   /* ================= FILTER CONTROLS ================= */
   document.getElementById("enable-all").onclick = () => {
