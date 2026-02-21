@@ -339,12 +339,23 @@ button.send:active {
 document.addEventListener("DOMContentLoaded", () => {
 
   const roomName = "{{ room_name }}";
-  // Assuming your WebSocket server is hosted at chat-box-p0m8.onrender.com
-  const websocketHost = "chat-box-p0m8.onrender.com"; 
-  const ws = new WebSocket(
-    (location.protocol === "https:" ? "wss" : "ws") +
-    "://" + websocketHost + "/ws/chat/" + roomName + "/"
-  );
+  const configuredWebsocketHost = "{{ websocket_host|default:'' }}".trim();
+
+  function buildWebSocketUrl() {
+    if (!configuredWebsocketHost) {
+      const protocol = location.protocol === "https:" ? "wss" : "ws";
+      return protocol + "://" + window.location.host + "/ws/chat/" + encodeURIComponent(roomName) + "/";
+    }
+
+    if (configuredWebsocketHost.startsWith("ws://") || configuredWebsocketHost.startsWith("wss://")) {
+      return configuredWebsocketHost.replace(/\/$/, "") + "/ws/chat/" + encodeURIComponent(roomName) + "/";
+    }
+
+    const protocol = location.protocol === "https:" ? "wss" : "ws";
+    return protocol + "://" + configuredWebsocketHost.replace(/\/$/, "") + "/ws/chat/" + encodeURIComponent(roomName) + "/";
+  }
+
+  const ws = new WebSocket(buildWebSocketUrl());
 
   const chatMessages = document.getElementById("chat-messages");
   const input = document.getElementById("chat-message-input");
