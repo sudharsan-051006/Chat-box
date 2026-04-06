@@ -71,15 +71,19 @@ DATABASES = {
 }
 
 # Channels (WebSockets) — using Redis
+REDIS_URL = os.environ.get("REDIS_URL")
+
+if not REDIS_URL:
+    raise Exception("❌ REDIS_URL not set")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config("REDIS_URL")],
+            "hosts": [REDIS_URL],
         },
     },
 }
-
 
 # Auth redirects
 LOGIN_URL = "/login/"
