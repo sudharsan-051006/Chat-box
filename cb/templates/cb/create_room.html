@@ -2,216 +2,311 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create or Join a Room</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create or Join a Room</title>
 
-  <!-- Bootstrap & Font Awesome -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
 
-  <style>
-    body {
-      background: radial-gradient(circle at top, #0b1220 0%, #020617 70%);
-      color: #ffffff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    <style>
+        :root {
+            --accent: #0ea5e9;
+            --glass: rgba(15, 23, 42, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+        }
 
-    /* Background animation canvas */
-    canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    main, footer {
-      position: relative;
-      z-index: 1;
-    }
+        body {
+            background-color: #020617;
+            /* Subtle Mesh Gradient */
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.1) 0px, transparent 50%);
+            color: #f8fafc;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
 
-    main {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-    }
+        canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.6;
+            pointer-events: none;
+        }
 
-    .card {
-      background: black;
-      border: 1px solid #2c2c2c;
-      border-radius: 12px;
-      padding: 2rem;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 6px 20px black;
-      position: relative;
-    }
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
 
-    .card h2 {
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: #0dcaf0;
-      text-align: center;
-    }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
 
-    .form-control {
-      background-color: white;
-      border: none;
-      box-shadow: 0 6px 20px black;
-    }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    .btn-primary {
-      background-color: #0dcaf0;
-      border: none;
-      font-weight: 500;
-    }
+        .card h2 {
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 2rem;
+            color: #fff;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
 
-    .btn-primary:hover {
-      background-color: #0bb5d4;
-    }
+        .form-control {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff !important;
+            box-shadow: none;
+            transition: all 0.3s ease;
+        }
 
-    .room-link {
-      background: #2b2b2b;
-      color: #0dcaf0;
-      text-decoration: none;
-      padding: 10px;
-      border-radius: 8px;
-      display: block;
-      text-align: center;
-      margin-top: 10px;
-    }
+        .form-control:focus {
+            background: rgba(2, 6, 23, 0.8);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+        }
 
-    footer {
-      background-color: black;
-      color: #ddd;
-      padding: 2rem 0 1rem;
-      border-top: 1px solid #2c2c2c;
-      text-align: center;
-    }
-  </style>
+        .form-control::placeholder {
+            color: #64748b;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:hover {
+            background: #f1f5f9;
+            transform: scale(1.02);
+            color: #000;
+        }
+
+        .available-header {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .room-link {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: #e2e8f0;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .room-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transform: translateX(5px);
+        }
+
+        .room-link i {
+            color: var(--accent);
+            margin-right: 12px;
+        }
+
+        /* Account Menu Styling */
+        .dropdown-toggle {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 10px !important;
+            color: #94a3b8 !important;
+            font-size: 13px !important;
+        }
+
+        .dropdown-menu {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 8px;
+        }
+
+        .dropdown-item {
+            color: #94a3b8;
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        footer {
+            background: transparent;
+            color: #475569;
+            padding: 2rem 0;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        hr {
+            border-color: var(--border);
+            opacity: 1;
+            margin: 2rem 0;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- Subtle animated background -->
 <canvas id="bg"></canvas>
 
 <main>
+    <div class="card">
+        <div class="dropdown position-absolute" style="top: 15px; right: 15px; z-index: 2;">
+            <button class="btn btn-sm dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <i class="fa-solid fa-user-gear me-1"></i> Account
+            </button>
 
-  <div class="card">
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="/password_change/">
+                        <i class="fa-solid fa-key me-2"></i>Change Password
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-    <!-- Account Dropdown -->
-    <div class="dropdown position-absolute" style="top: 15px; right: 15px; z-index: 2;">
-      <button class="btn btn-sm dropdown-toggle text-info"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
-        <i class="fa-solid fa-user-gear me-1"></i> Account
-      </button>
+        <h2><i class="fa-solid fa-comments me-2"></i>Chat Rooms</h2>
 
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li>
-          <a class="dropdown-item" href="/password_change/">
-            <i class="fa-solid fa-key me-2"></i>Change Password
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item" href="{% url 'logout' %}">
-            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
-          </a>
-        </li>
-      </ul>
+        <form method="POST" action="{% url 'create_room' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="text" name="room_name" class="form-control"
+                       placeholder="Enter new room name" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fa-solid fa-plus me-2"></i>Create Room
+            </button>
+        </form>
+
+        <hr>
+
+        <span class="available-header text-center">Available Rooms</span>
+
+        {% if rooms %}
+            <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                {% for room in rooms %}
+                    <a href="{% url 'room' room.name %}" class="room-link">
+                        <i class="fa-solid fa-door-open"></i>
+                        <span>{{ room.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-muted py-3" style="font-size: 14px;">No rooms created yet.</p>
+        {% endif %}
+
     </div>
-
-    <h2><i class="fa-solid fa-comments me-2"></i>Chat Rooms</h2>
-
-    <!-- Create Room -->
-    <form method="POST" action="{% url 'create_room' %}">
-      {% csrf_token %}
-      <div class="mb-3">
-        <input type="text" name="room_name" class="form-control"
-               placeholder="Enter new room name" required>
-      </div>
-      <button type="submit" class="btn btn-primary w-100">
-        <i class="fa-solid fa-plus me-2"></i>Create Room
-      </button>
-    </form>
-
-    <hr class="my-4">
-
-    <!-- Existing Rooms -->
-    <h5 class="text-info text-center mb-3">Available Rooms</h5>
-
-    {% if rooms %}
-      {% for room in rooms %}
-        <a href="{% url 'room' room.name %}" class="room-link">
-          <i class="fa-solid fa-door-open me-2"></i>{{ room.name }}
-        </a>
-      {% endfor %}
-    {% else %}
-      <p class="text-center text-muted">No rooms created yet.</p>
-    {% endif %}
-
-  </div>
 </main>
 
 <footer>
-  <small>© 2025 Chat Room. All Rights Reserved.</small>
+    <small>© 2026 Chat Room. Securely Encrypted.</small>
 </footer>
 
-<!-- Background Animation Script -->
 <script>
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById("bg");
+    const ctx = canvas.getContext("2d");
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
 
-let t = 0;
+    let t = 0;
 
-function drawWave(angle) {
-  ctx.save();
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate(angle);
-  ctx.beginPath();
+    function drawWave(angle, color) {
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(angle);
+        ctx.beginPath();
 
-  const scale = Math.min(canvas.width, canvas.height) / 4;
+        const scale = Math.min(canvas.width, canvas.height) / 4;
 
-  for (let x = -2; x <= 2; x += 0.04) {
-    const y = Math.sin(x * 2 - t) * 0.35;
-    ctx.lineTo(x * scale, y * scale);
-  }
+        for (let x = -2.5; x <= 2.5; x += 0.04) {
+            const y = Math.sin(x * 1.5 - t) * Math.cos(x * 0.5 + t) * 0.4;
+            ctx.lineTo(x * scale, y * scale);
+        }
 
-  ctx.strokeStyle = "rgba(148,163,184,0.15)";
-  ctx.lineWidth = 1.4;
-  ctx.stroke();
-  ctx.restore();
-}
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.restore();
+    }
 
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawWave(0);
-  drawWave(Math.PI / 2);
-  t += 0.003;
-  requestAnimationFrame(animate);
-}
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawWave(0, "rgba(14, 165, 233, 0.12)");
+        drawWave(Math.PI / 2, "rgba(56, 189, 248, 0.08)");
+        
+        t += 0.005;
+        requestAnimationFrame(animate);
+    }
 
-animate();
+    animate();
 </script>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
