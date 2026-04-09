@@ -3,147 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login | Secure Access</title>
 
     <style>
+        :root {
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --bg-dark: #020617;
+            --glass: rgba(15, 23, 42, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0f172a;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            /* Mesh Gradient for depth */
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.3) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.2) 0px, transparent 50%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            position: relative;
+            padding: 24px;
+            overflow: hidden;
+            color: #f8fafc;
         }
 
-        /* Background animation */
         canvas {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
             z-index: 0;
+            opacity: 0.6;
+            pointer-events: none;
         }
 
-        /* Login Card */
         .login-container {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            background: var(--glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
             width: 100%;
-            max-width: 420px;
-            padding: 28px 32px;
+            max-width: 400px;
+            padding: 40px;
             position: relative;
             z-index: 1;
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 32px;
         }
 
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            color: #cbd5e1;
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         input {
             width: 100%;
-            padding: 11px 14px;
-            background: rgba(30, 41, 59, 0.55);
-            border: 2px solid rgba(148, 163, 184, 0.28);
-            border-radius: 8px;
+            padding: 12px 16px;
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             font-size: 14px;
-            color: #e2e8f0;
-            outline: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
         input:focus {
-            border-color: #3b82f6;
-            background: rgba(30, 41, 59, 0.75);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(2, 6, 23, 0.8);
+            box-shadow: 0 0 0 4px var(--accent-glow);
         }
 
         .captcha-section {
-            background: rgba(30, 41, 59, 0.45);
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 24px 0;
         }
 
         .captcha-question {
-            background: rgba(51, 65, 85, 0.65);
-            padding: 10px;
-            border-radius: 6px;
-            margin: 6px 0 10px;
-            font-weight: 600;
-            color: #e2e8f0;
-            font-size: 14px;
+            background: var(--accent);
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            padding: 12px;
+            border-radius: 10px;
+            margin: 8px 0 12px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            letter-spacing: 1px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .btn-login {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            color: white;
+            padding: 14px;
+            background: #fff;
+            color: #000;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn-login:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            filter: brightness(0.9);
+        }
+
+        .btn-login:active {
+            transform: scale(0.98);
         }
 
         .alert {
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
             font-size: 13px;
-        }
-
-        .alert-error {
-            background: rgba(254, 202, 202, 0.1);
-            border-left: 4px solid #ef4444;
+            font-weight: 500;
+            text-align: center;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.2);
             color: #fca5a5;
         }
 
         .signup-link {
             text-align: center;
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid rgba(148, 163, 184, 0.18);
-            color: #94a3b8;
-            font-size: 13px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: #64748b;
+            font-size: 14px;
         }
 
         .signup-link a {
-            color: #60a5fa;
+            color: #fff;
             text-decoration: none;
             font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -153,10 +198,12 @@
 <canvas id="bg"></canvas>
 
 <div class="login-container">
+    <h2>Welcome Back</h2>
+    <p class="subtitle">Please enter your credentials</p>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-error">
+            <div class="alert">
                 {{ message }}
             </div>
         {% endfor %}
@@ -167,30 +214,28 @@
 
         <div class="form-group">
             <label>Username</label>
-            <input type="text" name="username" required>
+            <input type="text" name="username" placeholder="johndoe" required>
         </div>
 
         <div class="form-group">
             <label>Password</label>
-            <input type="password" name="password" required>
+            <input type="password" name="password" placeholder="••••••••" required>
         </div>
 
         <div class="captcha-section">
-            <label>Solve the Captcha</label>
+            <label>Security Verification</label>
             <div class="captcha-question">
                 {{ request.session.captcha_question }}
             </div>
-            <input type="text" name="captcha_answer" required>
+            <input type="text" name="captcha_answer" placeholder="Enter result" required>
         </div>
 
-        <button type="submit" class="btn-login">Login</button>
+        <button type="submit" class="btn-login">Continue</button>
     </form>
 
     <div class="signup-link">
-        Don’t have an account?
-        <a href="{% url 'signup' %}">Sign Up</a>
+        New here? <a href="{% url 'signup' %}">Create account</a>
     </div>
-
 </div>
 
 <script>
@@ -206,38 +251,39 @@
 
     let t = 0;
 
-    function drawWave(angle) {
+    function drawWave(angle, color) {
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(angle);
         ctx.beginPath();
 
-        const scale = Math.min(canvas.width, canvas.height) / 5;
+        const scale = Math.min(canvas.width, canvas.height) / 4;
 
-        for (let x = -2; x <= 2; x += 0.02) {
+        for (let x = -3; x <= 3; x += 0.01) {
             const y = Math.abs(x) * Math.sin(Math.abs(x) - t);
             const px = x * scale;
             const py = -y * scale;
 
-            if (x === -2) ctx.moveTo(px, py);
+            if (x === -3) ctx.moveTo(px, py);
             else ctx.lineTo(px, py);
         }
 
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.restore();
     }
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = "rgba(100,116,139,0.22)";
+        
+        // Dynamic colors for the waves to match accent
+        drawWave(0, "rgba(99, 102, 241, 0.15)");
+        drawWave(Math.PI / 2, "rgba(139, 92, 246, 0.1)");
+        drawWave(Math.PI / 4, "rgba(99, 102, 241, 0.08)");
+        drawWave(-Math.PI / 4, "rgba(167, 139, 250, 0.12)");
 
-        drawWave(0);
-        drawWave(Math.PI / 2);
-        drawWave(Math.PI / 4);
-        drawWave(-Math.PI / 4);
-
-        t += 0.005; // ultra-slow background
+        t += 0.008; 
         requestAnimationFrame(animate);
     }
 
