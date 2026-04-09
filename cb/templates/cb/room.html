@@ -2,608 +2,461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Chat Room</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chat | {{ room_name }}</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-  
-<style>
-/* ================= RESET ================= */
-* {
-  box-sizing: border-box;
-}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    
+    <style>
+        :root {
+            --accent: #0ea5e9;
+            --accent-glow: rgba(14, 165, 233, 0.2);
+            --bg-dark: #020617;
+            --glass: rgba(15, 23, 42, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --me-bubble: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+        }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
+        * { box-sizing: border-box; }
 
-/* ================= THEME VARIABLES ================= */
-:root {
-  --dark-bg: #343541;
-  --dark-sidebar: #202123;
-  --dark-border: #444;
-  --dark-text: #ececf1;
+        body {
+            height: 100vh;
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+            color: #f8fafc;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
 
-  --light-bg: #f8f9fa;
-  --light-border: #ddd;
-  --light-text: #212529;
+        /* --- LIGHT MODE OVERRIDES --- */
+        body.light-mode {
+            --bg-dark: #f8fafc;
+            --glass: rgba(255, 255, 255, 0.8);
+            --border: rgba(0, 0, 0, 0.05);
+            color: #0f172a;
+            background-image: radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.05) 0px, transparent 50%);
+        }
 
-  --primary: #0d6efd;
-  --bubble-other: #444654;
-  --bubble-me-light: #dcf8c6;
-}
+        .app {
+            display: flex;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
 
-/* ================= DARK MODE ================= */
-body.dark-mode {
-  background: var(--dark-bg);
-  color: var(--dark-text);
-}
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-body.dark-mode .sidebar {
-  background: var(--dark-sidebar);
-  border-right: 1px solid var(--dark-border);
-}
+        @media (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+            }
+            .sidebar.show { left: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
+        }
 
-body.dark-mode .chat-header,
-body.dark-mode .chat-input {
-  background: var(--dark-bg);
-  border-color: var(--dark-border);
-}
+        .sidebar h6 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
 
-body.dark-mode .message.me {
-  background: var(--primary);
-  color: #fff;
-  border-radius: 6px 16px 16px 16px;
-}
+        .room-badge {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--accent);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-body.dark-mode .message.other {
-  background: var(--bubble-other);
-  color: var(--dark-text);
-  border-radius: 16px 6px 16px 16px;
-}
+        .nav-btn {
+            text-align: left;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            background: transparent;
+            color: inherit;
+            margin-bottom: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-/* ================= LIGHT MODE ================= */
-body.light-mode {
-  background: var(--light-bg);
-  color: var(--light-text);
-}
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border);
+        }
 
-body.light-mode .sidebar {
-  background: #fff;
-  border-right: 1px solid var(--light-border);
-}
+        /* --- CHAT AREA --- */
+        .chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+        }
 
-body.light-mode .chat-header,
-body.light-mode .chat-input {
-  background: #fff;
-  border-color: var(--light-border);
-}
+        .chat-header {
+            padding: 16px 24px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
 
-body.light-mode .message.me {
-  background: var(--bubble-me-light);
-  color: #000;
-}
+        .chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scroll-behavior: smooth;
+        }
 
-body.light-mode .message.other {
-  background: #fff;
-  color: #000;
-}
+        /* Custom Scrollbar */
+        .chat-body::-webkit-scrollbar { width: 6px; }
+        .chat-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-/* ================= APP LAYOUT ================= */
-.app {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
+        .chat-container {
+            max-width: 900px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-/* ================= SIDEBAR ================= */
-.sidebar {
-  width: 260px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
+        /* --- MESSAGES --- */
+        .message {
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            max-width: 70%;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
 
-/* MOBILE SIDEBAR (OVERLAY) */
-@media (max-width: 992px) {
-  .sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    height: 100vh;
-    z-index: 1000;
-    transition: left 0.3s ease;
-  }
+        .message.me {
+            align-self: flex-end;
+            background: var(--me-bubble);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
 
-  .sidebar.show {
-    left: 0;
-  }
-}
+        .message.other {
+            align-self: flex-start;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
 
-/* ================= CHAT AREA ================= */
-.chat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+        .msg-user {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            opacity: 0.8;
+            display: block;
+        }
 
-/* ================= HEADER ================= */
-.chat-header {
-  padding: 12px 16px;
-  font-weight: 600;
-  border-bottom: 1px solid;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+        .msg-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 6px;
+            text-align: right;
+        }
 
-/* ================= CHAT BODY ================= */
-.chat-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 0;
-  padding-bottom: 80px; /* space for input bar */
-}
+        .system {
+            align-self: center;
+            font-size: 12px;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: #94a3b8;
+        }
 
+        /* --- INPUT BAR --- */
+        .chat-input {
+            padding: 24px;
+            background: linear-gradient(to top, var(--bg-dark), transparent);
+        }
 
-/* MESSAGE CONTAINER */
-.chat-container {
-  max-width: 760px;
-  margin: auto;
-  padding: 0 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-}
+        .input-wrapper {
+            max-width: 900px;
+            margin: auto;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
 
-/* ================= MESSAGES ================= */
-.message {
-  padding: 10px 14px;
-  width: fit-content;
-  max-width: 75%;
-  word-wrap: break-word;
-}
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: inherit;
+            padding: 10px;
+            max-height: 150px;
+            font-size: 15px;
+            outline: none !important;
+        }
 
-.message.me {
-  align-self: flex-end;
-}
+        .send-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
 
-.message.other {
-  align-self: flex-start;
-}
+        .send-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .send-btn:active { transform: scale(0.95); }
 
-/* MOBILE MESSAGE WIDTH */
-@media (max-width: 992px) {
-  .message {
-    max-width: 90%;
-    font-size: 0.95rem;
-  }
-}
+        /* Online Users List */
+        .list-group-item {
+            background: transparent;
+            border: none;
+            color: inherit;
+            padding: 8px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-/* MESSAGE TIME */
-.msg-time {
-  font-size: 0.7rem;
-  opacity: 0.7;
-  text-align: right;
-  margin-top: 4px;
-}
-
-/* SYSTEM MESSAGE */
-.system {
-  align-self: center;
-  opacity: 0.7;
-  font-style: italic;
-}
-
-/* ================= INPUT BAR ================= */
-.chat-input {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  padding: 10px;
-  border-top: 1px solid #444;
-  background: inherit;
-  z-index: 100;
-}
-
-/* Center input on desktop */
-.chat-input form {
-  max-width: 760px;
-  margin: auto;
-  display: flex;
-  gap: 8px;
-}
-
-/* TEXTAREA */
-textarea {
-  flex: 1;
-  resize: none;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 16px; /* prevents mobile zoom */
-  border: none;
-  resize:none;
-}
-
-textarea:focus {
-  outline: none;
-}
-
-/* SEND BUTTON */
-button.send {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0 18px;
-  min-height: 44px; /* touch-friendly */
-  cursor: pointer;
-}
-
-button.send:active {
-  transform: scale(0.97);
-}
-</style>
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 
 <body class="dark-mode">
 
 <div class="app">
+    <aside class="sidebar">
+        <div class="room-badge">
+            <span><i class="fa-solid fa-hashtag me-2"></i>{{ room_name }}</span>
+            {% if room.is_locked %}<i class="fa-solid fa-lock"></i>{% endif %}
+        </div>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <h6>ROOM</h6>
-  <div class="mb-2">{{ room_name }}</div>
+        <h6>Management</h6>
+        {% if request.user == room.created_by %}
+        <button id="lock-room-btn" class="nav-btn w-100" data-room="{{ room.name }}">
+            <i class="fa-solid {% if room.is_locked %}fa-unlock{% else %}fa-lock{% endif %}"></i>
+            {% if room.is_locked %}Unlock Room{% else %}Lock Room{% endif %}
+        </button>
+        {% endif %}
 
-  {% if request.user == room.created_by %}
-  <button id="lock-room-btn"
-          class="btn btn-sm btn-warning mb-2"
-          data-room="{{ room.name }}">
-    {% if room.is_locked %} 🔓 Unlock Room {% else %} 🔒 Lock Room {% endif %}
-  </button>
-  {% endif %}
+        <button id="clear-cache-btn" class="nav-btn w-100 text-warning">
+            <i class="fa-solid fa-broom"></i> Clear Local History
+        </button>
 
-  <a href="/password_change/" class="btn btn-sm btn-outline-secondary mb-2">
-    🔑 Change Password
-  </a>
+        <button id="toggle-theme-btn" class="nav-btn w-100">
+            <i class="fa-solid fa-circle-half-stroke"></i> Appearance
+        </button>
 
-  <button id="clear-cache-btn" class="btn btn-sm btn-outline-warning mb-2">
-    <i class="fa fa-trash" aria-hidden="true">Clear Chat</i>
-  </button>
+        <hr style="border-color: var(--border)">
 
-  
-  <button id="toggle-theme-btn" class="btn btn-sm btn-secondary mb-2">
-    Change Mode
-  </button>
+        <h6 id="online-users-title">Online Users (0)</h6>
+        <div id="online-users" class="mb-3"></div>
 
+        <div class="mt-auto">
+            <button id="leave-room-btn" class="nav-btn w-100 text-danger">
+                <i class="fa-solid fa-door-open"></i> Leave Room
+            </button>
+            <a href="{% url 'logout' %}" class="nav-btn w-100">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </aside>
 
-  <hr>
-  
-  <button id="leave-room-btn" class="btn btn-sm btn-outline-danger mb-2">
-    <i class="fas fa-house-leave">Leave Room</i>
-  </button>
+    <section class="chat">
+        <header class="chat-header">
+            <button id="menu-btn" class="btn btn-sm btn-outline-secondary d-lg-none">☰</button>
+            <span>{{ room_name }}</span>
+            <div class="d-flex gap-2">
+                <div id="connection-status" class="status-dot" style="background: #eab308;" title="Connecting..."></div>
+            </div>
+        </header>
 
+        <div class="chat-body">
+            <div id="chat-messages" class="chat-container"></div>
+        </div>
 
-  <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">
-    🚪 Logout
-  </a>
-
-
-  <hr>
-
-  <h6 id="online-users-title">Online Users (0)</h6>
-  <ul id="online-users" class="list-group mb-2"></ul>
-
-  <button id="enable-all" class="btn btn-sm btn-success mb-1">Enable All</button>
-  <button id="disable-all" class="btn btn-sm btn-danger mb-2">Disable All</button>
-
-  <hr>
-</div>
-
-<!-- CHAT -->
-<div class="chat">
-
-  <div class="chat-header">
-    <button id="menu-btn"
-            class="btn btn-sm btn-outline-secondary d-md-none">
-      ☰
-    </button>
-  
-    {{ room_name }} {% if room.is_locked %} 🔒 {% endif %}
-  </div>
-
-
-  <div class="chat-body">
-    <div id="chat-messages" class="chat-container"></div>
-  </div>
-
-  <div class="chat-input">
-    <form id="chat-form">
-      {% csrf_token %}
-      <textarea id="chat-message-input" rows="1" placeholder="Send a message..."></textarea>
-      <button class="send">Send</button>
-    </form>
-  </div>
-
-</div>
+        <div class="chat-input">
+            <form id="chat-form" class="input-wrapper">
+                {% csrf_token %}
+                <textarea id="chat-message-input" rows="1" placeholder="Type a message..."></textarea>
+                <button type="submit" class="send-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </section>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    const roomName = "{{ room_name }}";
+    const configuredWebsocketHost = "{{ websocket_host|default:'' }}".trim();
 
-  const roomName = "{{ room_name }}";
-  const configuredWebsocketHost = "{{ websocket_host|default:'' }}".trim();
-
-  function buildWebSocketUrl() {
-    if (!configuredWebsocketHost) {
-      const protocol = location.protocol === "https:" ? "wss" : "ws";
-      return protocol + "://" + window.location.host + "/ws/chat/" + encodeURIComponent(roomName) + "/";
+    function buildWebSocketUrl() {
+        const protocol = location.protocol === "https:" ? "wss" : "ws";
+        const host = configuredWebsocketHost || window.location.host;
+        return `${protocol}://${host.replace(/\/$/, "")}/ws/chat/${encodeURIComponent(roomName)}/`;
     }
 
-    if (configuredWebsocketHost.startsWith("ws://") || configuredWebsocketHost.startsWith("wss://")) {
-      return configuredWebsocketHost.replace(/\/$/, "") + "/ws/chat/" + encodeURIComponent(roomName) + "/";
+    const ws = new WebSocket(buildWebSocketUrl());
+    const chatMessages = document.getElementById("chat-messages");
+    const input = document.getElementById("chat-message-input");
+    const form = document.getElementById("chat-form");
+    const statusDot = document.getElementById("connection-status");
+    const currentUser = "{{ request.user.username }}";
+
+    ws.onopen = () => statusDot.style.background = "#22c55e";
+    ws.onclose = () => statusDot.style.background = "#ef4444";
+
+    /* --- CACHE & RENDER --- */
+    function renderMessage(data) {
+        if (!data || !data.user || !data.message) return;
+
+        const div = document.createElement("div");
+        if (data.user === "System") {
+            div.className = "system";
+            div.textContent = data.message;
+        } else {
+            const isMe = data.user.trim().toLowerCase() === currentUser.trim().toLowerCase();
+            div.className = `message ${isMe ? 'me' : 'other'}`;
+            
+            let content = "";
+            if (!isMe) content += `<span class="msg-user">${data.user}</span>`;
+            content += `<div>${data.message}</div><div class="msg-time">${data.time}</div>`;
+            div.innerHTML = content;
+        }
+
+        chatMessages.appendChild(div);
+        document.querySelector(".chat-body").scrollTop = document.querySelector(".chat-body").scrollHeight;
     }
 
-    const protocol = location.protocol === "https:" ? "wss" : "ws";
-    return protocol + "://" + configuredWebsocketHost.replace(/\/$/, "") + "/ws/chat/" + encodeURIComponent(roomName) + "/";
-  }
+    ws.onmessage = function (e) {
+        const raw = JSON.parse(e.data);
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const ws = new WebSocket(buildWebSocketUrl());
+        if (raw.type === "system") {
+            renderMessage({ user: "System", message: raw.text, time });
+        } else if (raw.type === "user_list") {
+            updateUserList(raw.users);
+        } else if (raw.user && raw.message) {
+            const data = { user: raw.user, message: raw.message, time };
+            saveToLocal(data);
+            renderMessage(data);
+        }
+    };
 
-  const chatMessages = document.getElementById("chat-messages");
-  const input = document.getElementById("chat-message-input");
-  const form = document.getElementById("chat-form");
-  const currentUser = "{{ request.user.username }}";
+    function updateUserList(users) {
+        const container = document.getElementById("online-users");
+        document.getElementById("online-users-title").textContent = `Online Users (${users.length})`;
+        container.innerHTML = users.map(u => `
+            <div class="list-group-item">
+                <div class="status-dot"></div>
+                <span>${u} ${u === currentUser ? '(You)' : ''}</span>
+            </div>
+        `).join('');
+    }
 
-  let visibleUsers = new Set();
-  let currentOnlineUsers = [];
+    function saveToLocal(data) {
+        const key = "chat_" + roomName;
+        const msgs = JSON.parse(localStorage.getItem(key) || "[]");
+        msgs.push(data);
+        localStorage.setItem(key, JSON.stringify(msgs.slice(-100)));
+    }
 
-  /* ================= CACHE ================= */
-  function cacheMessage(data) {
-    const key = "chat_" + roomName;
-    const msgs = JSON.parse(localStorage.getItem(key) || "[]");
-    msgs.push(data);
-    localStorage.setItem(key, JSON.stringify(msgs.slice(-200)));
-  }
-
-  function loadCachedMessages() {
-    chatMessages.innerHTML = "";
+    // Load cached
     const cached = JSON.parse(localStorage.getItem("chat_" + roomName) || "[]");
     cached.forEach(renderMessage);
-  }
 
-  /* ================= RENDER ================= */
-  function renderMessage(data) {
-  if (!data || !data.user || !data.message) return;
+    /* --- ACTIONS --- */
+    form.onsubmit = e => {
+        e.preventDefault();
+        if (input.value.trim() && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ message: input.value }));
+            input.value = "";
+            input.style.height = "auto";
+        }
+    };
 
-  if (
-    data.user !== "System" &&
-    visibleUsers.size > 0 &&
-    !visibleUsers.has(data.user)
-  ) return;
+    // Auto-resize textarea
+    input.addEventListener("input", function() {
+        this.style.height = "auto";
+        this.style.height = (this.scrollHeight) + "px";
+    });
 
-  const div = document.createElement("div");
+    document.getElementById("clear-cache-btn").onclick = () => {
+        localStorage.removeItem("chat_" + roomName);
+        chatMessages.innerHTML = "";
+        renderMessage({user: "System", message: "History cleared locally", time: ""});
+    };
 
-  if (data.user === "System") {
-    div.className = "system";
-    div.textContent = data.message;
-  } else {
-    const isMe =
-      data.user.trim().toLowerCase() ===
-      currentUser.trim().toLowerCase();
+    document.getElementById("leave-room-btn").onclick = () => {
+        ws.close();
+        window.location.href = "/";
+    };
 
-    div.className = "message " + (isMe ? "me" : "other");
+    // Theme Toggle
+    const themeBtn = document.getElementById("toggle-theme-btn");
+    themeBtn.onclick = () => {
+        document.body.classList.toggle("dark-mode");
+        document.body.classList.toggle("light-mode");
+        localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark-mode" : "light-mode");
+    };
+    if(localStorage.getItem("theme") === "light-mode") themeBtn.click();
 
-    const text = document.createElement("div");
-    text.textContent = isMe
-      ? data.message
-      : data.user + ": " + data.message;
-
-    const time = document.createElement("div");
-    time.className = "msg-time";
-    time.textContent = data.time;
-
-    div.append(text, time);
-  }
-
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-
-
-  /* ================= WEBSOCKET ================= */
-  ws.onmessage = function (e) {
-    const raw = JSON.parse(e.data);
-
-    const now = new Date();
-    const time =
-      now.getHours().toString().padStart(2, "0") + ":" +
-      now.getMinutes().toString().padStart(2, "0");
-
-    /* SYSTEM MESSAGE */
-    if (raw.type === "system") {
-      const data = {
-        user: "System",
-        message: raw.text,
-        time: time
-      };
-      cacheMessage(data);
-      renderMessage(data);
-      return;
-    }
-
-    /* USER LIST */
-    if (raw.type === "user_list") {
-      currentOnlineUsers = raw.users;
-
-      const ul = document.getElementById("online-users");
-      const title = document.getElementById("online-users-title");
-      ul.innerHTML = "";
-
-      raw.users.forEach(u => {
-        const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between";
-
-        const name = document.createElement("span");
-        name.textContent = u;
-
-        const btn = document.createElement("button");
-        const enabled = visibleUsers.size === 0 || visibleUsers.has(u);
-        btn.textContent = enabled ? "Disable" : "Enable";
-        btn.className = "btn btn-sm " + (enabled ? "btn-danger" : "btn-success");
-
-        btn.onclick = () => {
-          if (visibleUsers.size === 0)
-            raw.users.forEach(x => visibleUsers.add(x));
-
-          visibleUsers.has(u)
-            ? visibleUsers.delete(u)
-            : visibleUsers.add(u);
-
-          loadCachedMessages();
-        };
-
-        li.append(name, btn);
-        ul.appendChild(li);
-      });
-
-      title.textContent = "Online Users (" + raw.users.length + ")";
-      return;
-    }
-
-    /* USER MESSAGE */
-    if (raw.user && raw.message) {
-      const data = {
-        user: raw.user,
-        message: raw.message,
-        time: time
-      };
-      cacheMessage(data);
-      renderMessage(data);
-    }
-  };
-
-  /* ================= INIT ================= */
-  loadCachedMessages();
-
-  /* ================= SEND MESSAGE ================= */
-  form.onsubmit = e => {
-  e.preventDefault();
-
-  if (ws.readyState !== WebSocket.OPEN) {
-    alert("Connecting… please try again");
-    return;
-  }
-
-  if (input.value.trim()) {
-    ws.send(JSON.stringify({ message: input.value }));
-    input.value = "";
-  }
-};
-
-
-  /* ================= FILTER CONTROLS ================= */
-  document.getElementById("enable-all").onclick = () => {
-    visibleUsers.clear();
-    loadCachedMessages();
-  };
-
-  document.getElementById("disable-all").onclick = () => {
-    visibleUsers.clear();
-    visibleUsers.add(currentUser);
-    loadCachedMessages();
-  };
-
-  /* ================= LEAVE ROOM ================= */
-  document.getElementById("leave-room-btn").onclick = () => {
-    ws.close();
-    window.location.href = "/";
-  };
-
-  /* ================= LOCK ROOM ================= */
-  document.getElementById("lock-room-btn")?.addEventListener("click", () => {
-    fetch("/room/" + roomName + "/toggle-lock/", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": "{{ csrf_token }}",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        allowed_users: currentOnlineUsers
-      })
-    }).then(() => location.reload());
-  });
-
-
-  document.getElementById("clear-cache-btn").onclick = () => {
-  const key = "chat_" + roomName;
-
-  // Remove only this room's cache
-  localStorage.removeItem(key);
-
-  // Clear UI
-  chatMessages.innerHTML = "";
-
-  // Optional: show system message
-  const now = new Date();
-  const time =
-    now.getHours().toString().padStart(2, "0") + ":" +
-    now.getMinutes().toString().padStart(2, "0");
-
-  renderMessage({
-    user: "System",
-    message: "🧹 Chat history cleared (local)",
-    time: time
-  });
-};
-
-  
-  /* ================= THEME ================= */
-  const themeBtn = document.getElementById("toggle-theme-btn");
-  const saved = localStorage.getItem("theme") || "dark-mode";
-  document.body.className = saved;
-
-  themeBtn.onclick = () => {
-    document.body.classList.toggle("dark-mode");
-    document.body.classList.toggle("light-mode");
-    localStorage.setItem(
-      "theme",
-      document.body.classList.contains("dark-mode")
-        ? "dark-mode"
-        : "light-mode"
-    );
-  };
-
+    // Mobile Menu
+    const menuBtn = document.getElementById("menu-btn");
+    const sidebar = document.querySelector(".sidebar");
+    menuBtn.onclick = (e) => { e.stopPropagation(); sidebar.classList.toggle("show"); };
+    document.addEventListener("click", () => sidebar.classList.remove("show"));
 });
-
-const menuBtn = document.getElementById("menu-btn");
-const sidebar = document.querySelector(".sidebar");
-
-menuBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  sidebar.classList.toggle("show");
-});
-
-sidebar.addEventListener("click", e => {
-  e.stopPropagation();
-});
-
-document.addEventListener("click", () => {
-  if (window.innerWidth <= 768) {
-    sidebar.classList.remove("show");
-  }
-});
-
-
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
