@@ -45,7 +45,7 @@
         style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(2px);"></div>
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" style="width: 270px; min-width: 270px; background: var(--sidebar-dark); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 16px; z-index: 1000; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease; position: relative; overflow-y: auto;">
+    <aside class="sidebar" style="width: 270px; min-width: 270px; max-width: 85vw; background: var(--sidebar-dark); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 16px; z-index: 1000; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease; position: relative; overflow-y: auto;">
 
         <!-- Room label -->
         <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #64748b; margin-bottom: 8px; font-weight: 600;">Current Room</div>
@@ -104,7 +104,7 @@
     <main style="flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; background: var(--bg-dark);">
 
         <!-- Header -->
-        <header style="padding: 14px 20px; background: var(--glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; font-weight: 600; font-size: 15px; flex-shrink: 0; min-height: 60px;">
+        <header id="chat-header" style="padding: 14px 20px; background: var(--glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; font-weight: 600; font-size: 15px; flex-shrink: 0; min-height: 60px;">
             <button id="menu-btn"
                 style="display: none; background: transparent; border: 1px solid var(--border); color: var(--text-main); width: 38px; height: 38px; border-radius: 10px; cursor: pointer; flex-shrink: 0; font-size: 16px;">
                 <i class="fa-solid fa-bars"></i>
@@ -121,10 +121,11 @@
             <div id="chat-messages" style="max-width: 820px; margin: auto; display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
-        <!-- Input --><div style="
+        <!-- Input -->
+<div id="chat-input-wrapper" style="
     position: sticky;
     bottom: 0;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    padding: 10px 12px calc(100px + env(safe-area-inset-bottom));
     background: linear-gradient(to top, var(--bg-dark) 80%, transparent);
     flex-shrink: 0;
     z-index: 100;
@@ -226,6 +227,29 @@
 
     @media (max-width: 600px) {
         #chat-messages .message-me, #chat-messages .message-other { max-width: 88%; font-size: 14px; }
+
+        .sidebar { width: 82vw !important; min-width: 0 !important; max-width: 320px !important; padding: 16px 14px !important; }
+
+        #chat-header { padding: 10px 12px !important; gap: 10px !important; font-size: 14px !important; min-height: 52px !important; }
+        #chat-header #menu-btn { width: 34px !important; height: 34px !important; font-size: 14px !important; }
+
+        .chat-body { padding: 14px 10px !important; }
+
+        #chat-input-wrapper { padding: 8px 8px calc(60px + env(safe-area-inset-bottom)) !important; }
+        #chat-form { padding: 6px 8px !important; border-radius: 14px !important; gap: 6px !important; }
+        /* font-size kept at 16px on the input to prevent iOS Safari auto-zoom on focus */
+        #chat-message-input { font-size: 16px !important; padding: 6px 4px !important; }
+        #chat-form button[type="submit"] { width: 38px !important; height: 38px !important; font-size: 14px !important; }
+    }
+
+    @media (min-width: 901px) and (max-width: 1100px) {
+        .sidebar { width: 230px !important; min-width: 230px !important; padding: 18px 12px !important; }
+    }
+
+    @media (min-width: 1400px) {
+        .sidebar { width: 300px !important; min-width: 300px !important; }
+        #chat-messages { max-width: 960px !important; }
+        #chat-form { max-width: 960px !important; }
     }
 
     .user-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 5px; font-size: 13px; }
