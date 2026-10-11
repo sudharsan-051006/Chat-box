@@ -12,6 +12,7 @@ ALLOWED_HOSTS = [
     "chat-box-p0m8.onrender.com",
     "127.0.0.1",
     "localhost",
+    "chat.elinity.in",
 ]
 
 RECAPTCHA_SECRET_KEY = os.environ.get("RECAPTCHA_SECRET_KEY")
